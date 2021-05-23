@@ -1,5 +1,6 @@
 #-------------------------------
 # Function: Missing Mechanism
+# Authors: Qinglong Tian
 #-------------------------------
 
 linear.model.additive <- function(x1, x2, params)
@@ -58,5 +59,4 @@ SimulateData <- function(n, response.model, params.response,
 # Test the functions
 #-------------------------------
 
-SimulateData(50, linear.model.additive, c(1, -1, 1),
-             linear.model.interaction, c(1, -1, 1, 0.5))
+# SimulateData(50, linear.model.additive, c(1, -1, 1), linear.model.interaction, c(1, -1, 1, 0.5))
