@@ -40,6 +40,7 @@ splinesForY <- function(simY, simU, N_SIEVE, degree)
   bsDegree <- degree-1
   bs1 <- bs(simY, df = N_SIEVE, degree = bsDegree,
             Boundary.knots = range(simY), intercept = TRUE)
+  colnames(bs1) <- paste("bs", 1:ncol(bs1), sep = "")
   return(bs1)
 }
 
