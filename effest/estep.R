@@ -1,17 +1,16 @@
+inv_logit <- function(x)
+{
+  return(exp(x)/(1+exp(x)))
+}
 #-------------------------------
 # Function to compute the conditional expection of the indicator function (E-step)
 # Author: Qinglong Tian
 # Date: 5 June, 2021
 #-------------------------------
 
-inv_logit <- function(x)
-{
-  return(exp(x)/(1+exp(x)))
-}
-
 conditionalExpectionVec_OnlyY <- function(mat_spline, mat_x, vec_y, tauVec, betaVec, sigmaScalar)
 # mat_spline: is the matrix for the b-spline (Y Only, no X involved), columns is the spline, row is the observation
-# mat_x: is the model matrix (for both missing and non-missing), the first column should be all 1;
+# mat_x: is the model matrix (only missing), the first column should be all 1;
 # vec_y: is the non-missing response; 
 # tauVec: is the estimate of tau from the last iteration
 # betaVec: is the estiamte of beta from the last iteration
@@ -65,4 +64,19 @@ conditionalExpectionVec_OnlyY <- function(mat_spline, mat_x, vec_y, tauVec, beta
   }
   
   return(unscaled_condtional_expectation)
+}
+
+#-------------------------------
+# The target functions (that need to be maximized)
+# Author: Qinglong Tian
+# Date: 5 June, 2021
+#-------------------------------
+
+betaTargetFunc <- function(pars, betaVec, sigmaVec, tauVec)
+# Compute the target function of beta (as well as sigma)
+{
+  betaNew <- pars[-length(pars)]
+  sigmaNew <- pars[length(pars)]
+  
+  
 }
