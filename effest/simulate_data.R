@@ -54,9 +54,3 @@ SimulateData <- function(n, response.model, params.response,
   output <- data.frame(Y=Y, U=U, Z=Z, Obs=non.missing.ind)
   return(output)
 }
-
-#-------------------------------
-# Test the functions
-#-------------------------------
-
-# SimulateData(50, linear.model.additive, c(1, -1, 1), linear.model.interaction, c(1, -1, 1, 0.5))
