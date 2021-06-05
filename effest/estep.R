@@ -1,5 +1,5 @@
 #-------------------------------
-# Function to compute the conditional expection of the indicator function
+# Function to compute the conditional expection of the indicator function (E-step)
 # Author: Qinglong Tian
 # Date: 5 June, 2021
 #-------------------------------
