@@ -6,6 +6,8 @@ inv_logit <- function(x)
 # Function to compute the conditional expection of the indicator function (E-step)
 # Author: Qinglong Tian
 # Date: 5 June, 2021
+# Comments: this function might be useless as we may use "lm" like function to solve this,
+#           but it can be used to check if the results match.
 #-------------------------------
 
 conditionalExpectionVec_OnlyY <- function(mat_spline, mat_x, vec_y, tauVec, betaVec, sigmaScalar)
@@ -104,7 +106,7 @@ betaTargetFunc_OnlyY <- function(pars, betaVec, sigmaVec, tauVec, X_obs_mat,
     logLik1 <- logLik1+weightedSum
   }
   
-  return(logLik1)
+  return(-logLik1)
 }
 
 etaTargetFunc_OnlyY <- function(pars, betaVec, sigmaVec, tauVec, X_obs_mat,
@@ -137,5 +139,5 @@ etaTargetFunc_OnlyY <- function(pars, betaVec, sigmaVec, tauVec, X_obs_mat,
     }
   }
   
-  return(logLik1)
+  return(-logLik1)
 }

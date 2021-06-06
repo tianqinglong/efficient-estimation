@@ -39,3 +39,10 @@ betaTargetFunc_OnlyY(newPars, betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_
 
 newPars <- c(1, 0.5, 1, 1, 1, 1)
 etaTargetFunc_OnlyY(newPars, betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
+
+newPars <- c(0.8, -0.4, 1, 0.5)
+optim(newPars, betaTargetFunc_OnlyY, betaVec = betaVec,
+      sigmaVec = sigmaSCL, tauVec = tauVec, X_obs_mat = mat_non_missing_X,
+      mat_spline = mat_Spline, X_missing_mat = mat_X, Y_non_missing = yVec) -> op1
+
+betaTargetFuncMax_LM(betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
