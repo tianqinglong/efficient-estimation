@@ -72,11 +72,70 @@ conditionalExpectionVec_OnlyY <- function(mat_spline, mat_x, vec_y, tauVec, beta
 # Date: 5 June, 2021
 #-------------------------------
 
-betaTargetFunc <- function(pars, betaVec, sigmaVec, tauVec)
+betaTargetFunc_OnlyY <- function(pars, betaVec, sigmaVec, tauVec, X_obs_mat,
+                                 mat_spline, X_missing_mat, Y_non_missing)
 # Compute the target function of beta (as well as sigma)
 {
   betaNew <- pars[-length(pars)]
   sigmaNew <- pars[length(pars)]
   
+  n_non_missing <- nrow(X_obs_mat)
+  n_missing <- nrow(X_missing_mat)
   
+  logLik1 <- 0
+  
+  for (i in 1:n_non_missing)
+  {
+    mu_temp <- sum(X_obs_mat[i,]*betaNew)
+    logLik1 <- logLik1 + dnorm(Y_non_missing[i], mu_temp, sigmaNew, log = TRUE)
+  }
+  
+  conditionalExpectionVec_OnlyY(mat_spline, X_missing_mat, Y_non_missing, tauVec,
+                                betaVec, sigmaVec) -> condProbMat
+  for (i in 1:n_missing)
+  {
+    mu_temp <- sum(X_missing_mat[i,]*betaNew)
+
+    logLikModel <- dnorm(Y_non_missing, mu_temp, sigmaNew, log = TRUE)
+    weightVec <- condProbMat[i,]
+    
+    weightedSum <- sum(weightVec*logLikModel)
+    
+    logLik1 <- logLik1+weightedSum
+  }
+  
+  return(logLik1)
+}
+
+etaTargetFunc_OnlyY <- function(pars, betaVec, sigmaVec, tauVec, X_obs_mat,
+                                mat_spline, X_missing_mat, Y_non_missing)
+{
+  tauNew <- pars
+  
+  n_non_missing <- nrow(X_obs_mat)
+  n_missing <- nrow(X_missing_mat)
+  
+  logLik1 <- 0
+  
+  for (i in 1:n_non_missing)
+  {
+    splineValX <- mat_spline[i,]
+    logLik1 <- log(inv_logit(sum(splineValX*tauNew)))+logLik1
+  }
+  
+  conditionalExpectionVec_OnlyY(mat_spline, X_missing_mat, Y_non_missing, tauVec,
+                                betaVec, sigmaVec) -> condProbMat
+  
+  for (i in 1:n_missing)
+  {
+    for (k in 1:n_non_missing)
+    {
+      weight <- condProbMat[i, k]
+      splineValX <- mat_spline[k,]
+      logLik_temp <- log(1-inv_logit(sum(splineValX*tauNew)))
+      logLik1 <- logLik1 + logLik_temp*weight
+    }
+  }
+  
+  return(logLik1)
 }
