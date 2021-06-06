@@ -1,8 +1,6 @@
 #-------------------------------
 # Use optimization to derive the beta values
-# Comments: If we can use lm(), no need to use the target function in e-step.
-# Comments: weighted likelihood estimation is different from weighted least square!
-# Comments: need to change, the current version is wrong!
+# Comments: beta estimates match the optim function, but sigma does not. Need to investigate
 #-------------------------------
 
 betaTargetFuncMax_LM <- function(betaVec, sigmaVec, tauVec, X_obs_mat,
