@@ -31,6 +31,6 @@ betaTargetFuncMax_LM <- function(betaVec, sigmaVec, tauVec, X_obs_mat,
   colnames(dat) <- c("Y", "Intercept", "U", "Z")
   dat <- as.data.frame(dat)
   
-  lm(Y~U+Z, data = dat, weights = WeightVec) -> lmFit
+  glm(Y~U+Z, data = dat, weights = WeightVec, family=gaussian(link = "identity")) -> lmFit
   return(lmFit)
 }
