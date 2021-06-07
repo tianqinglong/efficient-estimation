@@ -1,5 +1,6 @@
 #-------------------------------
 # The objective functions (that need to be maximized)
+# The first part still needs investigation but the second part is done.
 # Author: Qinglong Tian
 # Date: 5 June, 2021
 #-------------------------------
