@@ -5,7 +5,7 @@
 #-------------------------------
 
 library(splines)
-dat <- SimulateData(50, linear.model.additive, c(1, -1, 1), linear.model.interaction, c(1, -1, 1, 0.5))
+# dat <- SimulateData(50, linear.model.additive, c(1, -1, 1), linear.model.interaction, c(1, -1, 1, 0.5))
 
 #-------------------------------
 # B-Spline Function for \pi(Y)
