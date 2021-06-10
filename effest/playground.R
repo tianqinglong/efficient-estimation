@@ -224,21 +224,21 @@ Rcpp::sourceCpp("mstep_cpp.cpp")
 Rcpp::sourceCpp("estep_cpp.cpp")
 
 # missParam <- c(-1, 1, -0.5, 3) # parameters for function yTransFunc1()
-missParam <- c(-1, 1) # parameters for function yTransFunc2()
+missParam <- c(-1, 1, 0.8) # parameters for function yTransFunc2()
 
 t0 <- Sys.time()
 
-n <- 800
-xx <- rnorm(n)
+n <- 200
+xx <- rnorm(n, 0, 0.5)
 xx <- as.matrix(xx, ncol = 1)
 xMat <- cbind(1, xx)
 
-betaVal <- c(1.5, -0.8)
+betaVal <- c(2, -0.5)
 
-yVec <- ySimulatorLM(xMat, betaVal, 1.2)
+yVec <- ySimulatorLM(xMat, betaVal, sd <- 1)
 obsVec <- numeric(n)
 
-FUN <- yTransFunc2
+FUN <- yTransFunc3
 
 for (i in 1:length(obsVec))
 {
@@ -264,8 +264,8 @@ datSpline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
 # mat_Spline <- datNonMissing[,(obsIndex+1):endIndex]
 
 # ## Data matrices
-# mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, c(2, obsIndex-1)])
-# mat_X <- cbind(Intercept=1, datMissing[, c(2, obsIndex-1)])
+# mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, 2:(obsIndex-1)])
+# mat_X <- cbind(Intercept=1, datMissing[, 2:(obsIndex-1)])
 #-------------------
 
 iterationEM(datSpline)

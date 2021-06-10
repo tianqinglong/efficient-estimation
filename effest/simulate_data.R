@@ -47,19 +47,19 @@
 # Function: simulate fully observed data with missing indicator
 #-------------------------------
 
-SimulateData <- function(n, response.model, params.response,
-                         missing.model, params.missing,
-                         dim_U=1, dim_Z=1)
-{
-  U <- matrix(rnorm(n*dim_U), nrow = n)
-  Z <- matrix(rnorm(n*dim_Z), nrow = n)
-  Y <- response.model(U, Z, params.response)
+# SimulateData <- function(n, response.model, params.response,
+#                          missing.model, params.missing,
+#                          dim_U=1, dim_Z=1)
+# {
+#   U <- matrix(rnorm(n*dim_U), nrow = n)
+#   Z <- matrix(rnorm(n*dim_Z), nrow = n)
+#   Y <- response.model(U, Z, params.response)
   
-  non.missing.ind <- MissingMechanism(Y, U, missing.model, params.missing)
+#   non.missing.ind <- MissingMechanism(Y, U, missing.model, params.missing)
   
-  output <- data.frame(Y=Y, U=U, Z=Z, Obs=non.missing.ind)
-  return(output)
-}
+#   output <- data.frame(Y=Y, U=U, Z=Z, Obs=non.missing.ind)
+#   return(output)
+# }
 
 #-------------------------------
 # Rewrite the data generating functions
