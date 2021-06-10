@@ -31,8 +31,14 @@ betaVec <- c(0.9, -0.5, 0.9)
 tauVec <- rnorm(num_of_sieve)
 sigmaSCL <- sd(yVec)
 
-conditionalExpectionVec_OnlyY(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL) -> condProb
+mat_Spline <- as.matrix(mat_Spline)
+mat_X <- as.matrix(mat_X)
 
+conditionalExpectionVec_OnlyY(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL) -> condProb
+conditionalExpectionVec_OnlyY_Cpp(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL) -> condProb_cpp
+
+microbenchmark::microbenchmark(conditionalExpectionVec_OnlyY(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL),
+                               conditionalExpectionVec_OnlyY_Cpp(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL))
 #-------------------------------
 # Test Objectives Functions
 #-------------------------------
