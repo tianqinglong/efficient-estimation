@@ -112,11 +112,13 @@ lbfgs(etaTargetFunc_OnlyY, etaTargetFunc_OnlyY_gr,
 # sqrt(sum(ws*lmFit$residuals^2)/sum(ws))
 
 library(tidyverse)
+library(lbfgs)
 source("simulate_data.R")
 source("bspline.R")
 source("estep.R")
 source("mstep.R")
 Rcpp::sourceCpp("mstep_cpp.cpp")
+Rcpp::sourceCpp("estep_cpp.cpp")
 
 num_of_sieve <- 4
 
@@ -139,7 +141,9 @@ betaVec <- c(0.9, -0.5, 0.9)
 tauVec <- rnorm(num_of_sieve)
 sigmaSCL <- sd(yVec)
 
-conditionalExpectionVec_OnlyY(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL) -> condProb
+conditionalExpectionVec_OnlyY_Cpp(as.matrix(mat_Spline),
+                                  as.matrix(mat_X),
+                                  yVec, tauVec, betaVec, sigmaSCL) -> condProb
 
 newPars <- rnorm(num_of_sieve)
 etaTargetFunc_OnlyY(newPars, betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
@@ -151,3 +155,9 @@ paramPackage <- list(nMiss = nrow(datMissing),
                      splineMatrix = c(t(mat_Spline)),
                      condProbMat = c(t(condProb)))
 mStepSecondPart(paramPackage)
+
+lbfgs(etaTargetFunc_OnlyY, etaTargetFunc_OnlyY_gr,
+      betaVec = betaVec, sigmaVec = sigmaSCL, tauVec = tauVec, X_obs_mat = mat_non_missing_X,
+      mat_spline = mat_Spline, X_missing_mat = mat_X, Y_non_missing = yVec,
+      vars = rnorm(num_of_sieve)) -> op_lbfgs
+op_lbfgs

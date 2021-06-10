@@ -65,7 +65,7 @@ Rcpp::NumericVector mStepSecondPart(Rcpp::List pars)
     status = gsl_multimin_test_gradient (s->gradient, 1e-3);
     
     if (status == GSL_SUCCESS)
-      printf("Minimum found");
+      printf("Minimum found!\n");
   }
   while (status == GSL_CONTINUE && iter < 100);
   
