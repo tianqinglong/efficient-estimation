@@ -104,3 +104,44 @@ lbfgs(etaTargetFunc_OnlyY, etaTargetFunc_OnlyY_gr,
 # optim(pars, objFunc1, xx = xx, yy = yy, ws = ws) -> op0
 # 
 # sqrt(sum(ws*lmFit$residuals^2)/sum(ws))
+
+library(tidyverse)
+source("simulate_data.R")
+source("bspline.R")
+source("estep.R")
+source("mstep.R")
+Rcpp::sourceCpp("mstep_cpp.cpp")
+
+num_of_sieve <- 4
+
+dat <- SimulateData(50, linear.model.additive, c(1, -1, 1), linear.model.interaction, c(1, -1, 1, 0.5))
+datWBspline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
+
+#-------------------------------
+# Test the conditional expectation function
+#-------------------------------
+
+datWBspline %>% filter(Obs == 1) -> datNonMissing
+datWBspline %>% filter(Obs == 0) -> datMissing
+
+yVec <- datNonMissing[,1]
+mat_Spline <- datNonMissing[,-c(1, 2, 3, 4)]
+mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, c(2, 3)])
+mat_X <- cbind(Intercept=1, datMissing[, c(2, 3)])
+
+betaVec <- c(0.9, -0.5, 0.9)
+tauVec <- rnorm(num_of_sieve)
+sigmaSCL <- sd(yVec)
+
+conditionalExpectionVec_OnlyY(mat_Spline, mat_X, yVec, tauVec, betaVec, sigmaSCL) -> condProb
+
+newPars <- rnorm(num_of_sieve)
+etaTargetFunc_OnlyY(newPars, betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
+etaTargetFunc_OnlyY_gr(newPars, betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
+
+paramPackage <- list(nMiss = nrow(datMissing),
+                     nObs = nrow(datNonMissing),
+                     nSpline = ncol(mat_Spline),
+                     splineMatrix = c(t(mat_Spline)),
+                     condProbMat = c(t(condProb)))
+mStepSecondPart(paramPackage)
