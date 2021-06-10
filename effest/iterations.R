@@ -6,7 +6,6 @@
 
 iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 {
-	options(digits=4)
 	# Split the data into missing and non-missing parts
 	datNonMissing <- datSpline[datSpline$Obs == 1,]
 	datMissing <- datSpline[datSpline$Obs == 0,]
@@ -22,8 +21,12 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 	mat_Spline <- datNonMissing[,(obsIndex+1):endIndex]
 
 	## Data matrices
-	mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, c(2, obsIndex)])
-	mat_X <- cbind(Intercept=1, datMissing[, c(2, obsIndex-1)])
+	mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, 2:(obsIndex-1)])
+	mat_X <- cbind(Intercept=1, datMissing[, 2:(obsIndex-1)])
+
+	xName <- colnames(datNonMissing)[2:(obsIndex-1)]
+	colnames(mat_non_missing_X)[2:(obsIndex-1)] <- xName
+	colnames(mat_X)[[2:(obsIndex-1)]] <- xName
 
 	# Initial values
 
@@ -46,7 +49,7 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 		iter <- iter+1
 
 		## E-step
-
+		
 		condProb <- conditionalExpectionVec_OnlyY_Cpp(as.matrix(mat_Spline), as.matrix(mat_X), yVec, tauVec, betaVec, sigmaSCL)
 
 		## M-step
@@ -55,7 +58,10 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 		
 		paramList <- list(nMiss = nrow(datMissing), nObs = nrow(datNonMissing), nSpline = ncol(mat_Spline),
 			splineMatrix = c(t(mat_Spline)), condProbMat = c(t(condProb)))
-		tauNew <- mStepSecondPart(paramList)
+		outNew <- mStepSecondPart(paramList)
+		tauNew <- outNew[1:(length(outNew)-1)]
+
+		loglik2 <- outNew[length(outNew)]
 
 		### beta/sigma part
 		betaSigmaNew <- betaTargetFuncMax_LM_light(condProb, mat_non_missing_X, mat_Spline, mat_X, yVec)
@@ -63,10 +69,22 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 		betaNew <- betaSigmaNew[1:length(betaVec)]
 		sigmaNew <- betaSigmaNew[length(betaSigmaNew)]
 
-		## Check convergence
-		diff <- (sigmaNew-sigmaSCL)^2 + sum((betaNew-betaVec)^2) + sum((tauNew-tauVec)^2)
+		loglik1 <- betaTargetFunc_OnlyY(c(betaNew, sigmaNew), betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
 
-		print(paste("Iteration ", iter,"; Diff=", diff, "; Sigma=", format(round(sigmaNew, 4), nsmall = 4), "; Beta=", format(round(max(betaNew), 4), nsmall = 4), "; Tau=", format(round(max(tauNew), 2), nsmall = 2), sep = ""))
+		## Check convergence
+		newlogLik <- loglik1+loglik2
+		if (iter == 1)
+		{
+			loglikSum <- newlogLik
+			diff <- 1
+		}
+		else
+		{
+
+			diff <- abs(loglikSum-newlogLik)/abs(loglikSum)
+		}
+
+		print(paste("Iteration ", iter,": Change=", 100*diff, "%; Sigma=", format(round(sigmaNew, 4), nsmall = 4), "; Max_Beta=", format(round(max(betaNew), 4), nsmall = 4), "; Max_Tau=", format(round(max(tauNew), 2), nsmall = 2), sep = ""))
 
 		if (diff < tol)
 		{
@@ -76,6 +94,7 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 		betaVec <- betaNew
 		tauVec <- tauNew
 		sigmaSCL <- sigmaNew
+		loglikSum <- newlogLik
 	}
 
 

@@ -67,14 +67,16 @@ Rcpp::NumericVector mStepSecondPart(Rcpp::List pars)
   }
   while (status == GSL_CONTINUE && iter < 100);
   
-  Rcpp::NumericVector tauNext (nSpline);
+  Rcpp::NumericVector output (nSpline+1);
   for (i = 0; i<nSpline; i++)
   {
-    tauNext[i] = gsl_vector_get(s->x, i);
+    output[i] = gsl_vector_get(s->x, i);
   }
   
+  output[nSpline] = obj_f(s->x, &extraParam);
+
   gsl_multimin_fdfminimizer_free(s);
   gsl_vector_free(x);
   
-  return tauNext;
+  return output;
 }
