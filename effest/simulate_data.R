@@ -3,11 +3,11 @@
 # Authors: Qinglong Tian
 #-------------------------------
 
-linear.model.additive <- function(x1, x2, params)
+linear.model.additive <- function(x1, x2, params, sigma = 1)
 {
   X <- cbind(1, x1, x2)
   params <- matrix(params, ncol=1)
-  return(X %*% params)
+  return(X %*% params+sigma*rnorm(nrow(X)))
 }
 
 linear.model.interaction <- function(x1, x2, params)
@@ -17,6 +17,12 @@ linear.model.interaction <- function(x1, x2, params)
   X <- cbind(1, x1, x2, x12)
   params <- matrix(params, ncol=1)
   return(X %*% params)
+}
+
+missing.single.y <- function(y, params)
+{
+  yVec <- c(1, 3*sin(y), y, y^2)
+  return(sum(yVec*params))
 }
 
 MissingMechanism <- function(y, U, linear.model, params, link="probit")

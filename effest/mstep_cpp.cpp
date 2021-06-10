@@ -49,7 +49,7 @@ Rcpp::NumericVector mStepSecondPart(Rcpp::List pars)
     gsl_vector_set(x, i, 0);
   }
   
-  T = gsl_multimin_fdfminimizer_conjugate_fr;
+  T = gsl_multimin_fdfminimizer_vector_bfgs2;
   s = gsl_multimin_fdfminimizer_alloc (T, nSpline);
   
   gsl_multimin_fdfminimizer_set (s, &my_func, x, 0.01, 1e-4);
@@ -64,8 +64,6 @@ Rcpp::NumericVector mStepSecondPart(Rcpp::List pars)
     
     status = gsl_multimin_test_gradient (s->gradient, 1e-3);
     
-    if (status == GSL_SUCCESS)
-      printf("Minimum found!\n");
   }
   while (status == GSL_CONTINUE && iter < 100);
   

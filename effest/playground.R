@@ -161,3 +161,46 @@ lbfgs(etaTargetFunc_OnlyY, etaTargetFunc_OnlyY_gr,
       mat_spline = mat_Spline, X_missing_mat = mat_X, Y_non_missing = yVec,
       vars = rnorm(num_of_sieve)) -> op_lbfgs
 op_lbfgs
+
+### Test the EM algorithm
+
+library(tidyverse)
+
+source("simulate_data.R")
+source("bspline.R")
+source("estep.R")
+source("mstep.R")
+source("iterations.R")
+Rcpp::sourceCpp("mstep_cpp.cpp")
+Rcpp::sourceCpp("estep_cpp.cpp")
+
+num_of_sieve <- 4
+
+dat <- SimulateData(30, linear.model.additive, c(3, -2, 4), missing.single.y, c(1, -1, 1, 0.5))
+datWBspline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
+
+      datNonMissing <- datWBspline[datSpline$Obs == 1,]
+      datMissing <- datWBspline[datSpline$Obs == 0,]
+
+      # Extract some information
+
+      ## Non-missing y values
+      yVec <- datNonMissing[,1]
+
+      ## B-spline matrix
+      obsIndex <- which(colnames(datNonMissing)=="Obs")
+      endIndex <- ncol(datNonMissing)
+      mat_Spline <- datNonMissing[,(obsIndex+1):endIndex]
+
+      ## Data matrices
+      mat_non_missing_X <- cbind(Intercept=1, datNonMissing[, c(2, obsIndex)])
+      mat_X <- cbind(Intercept=1, datMissing[, c(2, obsIndex-1)])
+
+      # Initial values
+
+      ## beta
+      initLM <- lm(Y~., data = datNonMissing[,1:(obsIndex-1)])
+      betaVec <- initLM$coefficients
+
+source("iterations.R")
+iterationEM(datWBspline)
