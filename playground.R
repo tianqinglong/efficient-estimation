@@ -215,25 +215,25 @@
 # Rewrite the data simulating functions
 #-------------------------------
 
-source("simulate_data.R")
-source("bspline.R")
-source("estep.R")
-source("mstep.R")
-source("iterations.R")
-Rcpp::sourceCpp("mstep_cpp.cpp")
-Rcpp::sourceCpp("estep_cpp.cpp")
-Rcpp::sourceCpp("lmloglik.cpp")
+source("effest/simulate_data.R")
+source("effest/bspline.R")
+source("effest/estep.R")
+source("effest/mstep.R")
+source("effest/iterations.R")
+Rcpp::sourceCpp("effest/mstep_cpp.cpp")
+Rcpp::sourceCpp("effest/estep_cpp.cpp")
+Rcpp::sourceCpp("effest/lmloglik.cpp")
 
 # missParam <- c(-1, 1, -0.5, 3) # parameters for function yTransFunc1()
 missParam <- c(-1, 1, 0.8) # parameters for function yTransFunc2()
 
 
-n <- 1000
+n <- 100
 xx <- rnorm(n, 0, 0.5)
 xx <- as.matrix(xx, ncol = 1)
 xMat <- cbind(1, xx)
 
-betaVal <- c(2, -1)
+betaVal <- c(3, -3.5)
 
 yy <- ySimulatorLM(xMat, betaVal, sd <- 1)
 obsVec <- numeric(n)
