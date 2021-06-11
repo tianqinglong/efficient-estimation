@@ -119,6 +119,7 @@ betaTargetFuncMax_LM_light <- function(condProbMat, X_obs_mat, mat_spline, X_mis
   n_missing <- nrow(X_missing_mat)
   
   Y_new <- c(Y_non_missing, rep(Y_non_missing, n_missing))
+  Y_new <- as.matrix(Y_new, ncol = 1)
   X_new <- as.matrix(X_obs_mat)
   for (i in 1:n_missing)
   {
@@ -130,13 +131,16 @@ betaTargetFuncMax_LM_light <- function(condProbMat, X_obs_mat, mat_spline, X_mis
   WeightVec <- rep(1, n_non_missing)
   WeightVec <- c(WeightVec, c(t(condProbMat)))
   
-  dat <- cbind(Y_new, X_new)
+  # dat <- cbind(Y_new, X_new)
 
-  colnames(dat) <- c("Y", colnames(X_obs_mat))
-  dat <- as.data.frame(dat)
+  # colnames(dat) <- c("Y", colnames(X_obs_mat))
+  # dat <- as.data.frame(dat)
 
-  glm(Y~0+., data = dat, weights = WeightVec, family=gaussian(link = "identity")) -> lmFit
-  
+  # glm(Y~0+., data = dat, weights = WeightVec, family=gaussian(link = "identity")) -> lmFit
+
+  wts <- sqrt(WeightVec)
+  lmFit <- .Call(stats:::C_Cdqrls, X_new*wts, Y_new*wts, 1e-4, FALSE)
+
   betaNew <- lmFit$coefficients
   sigmaNew <- sqrt(sum(WeightVec*lmFit$residuals^2)/sum(WeightVec))
   
@@ -182,3 +186,4 @@ etaTargetFunc_OnlyY_gr <- function(params, betaVec, sigmaVec, tauVec, X_obs_mat,
   }
   return(-grVec)
 }
+

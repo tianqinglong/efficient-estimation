@@ -222,31 +222,32 @@ source("mstep.R")
 source("iterations.R")
 Rcpp::sourceCpp("mstep_cpp.cpp")
 Rcpp::sourceCpp("estep_cpp.cpp")
+Rcpp::sourceCpp("lmloglik.cpp")
 
 # missParam <- c(-1, 1, -0.5, 3) # parameters for function yTransFunc1()
 missParam <- c(-1, 1, 0.8) # parameters for function yTransFunc2()
 
-t0 <- Sys.time()
 
-n <- 200
+n <- 1000
 xx <- rnorm(n, 0, 0.5)
 xx <- as.matrix(xx, ncol = 1)
 xMat <- cbind(1, xx)
 
-betaVal <- c(2, -0.5)
+betaVal <- c(2, -1)
 
-yVec <- ySimulatorLM(xMat, betaVal, sd <- 1)
+yy <- ySimulatorLM(xMat, betaVal, sd <- 1)
 obsVec <- numeric(n)
 
 FUN <- yTransFunc3
 
 for (i in 1:length(obsVec))
 {
-      obsVec[i] <- ifelse(runif(1) < PiY(yVec[i], FUN, missParam), 1, 0)
+      tempProb <- PiY(yy[i], FUN, missParam)
+      obsVec[i] <- ifelse(runif(1) < tempProb, 1, 0)
 }
 
 num_of_sieve <- 3
-dat <- data.frame(Y = yVec, Z = xx, Obs = obsVec)
+dat <- data.frame(Y = yy, Z = xx, Obs = obsVec)
 datSpline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
 
 #-------------------
@@ -268,6 +269,8 @@ datSpline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
 # mat_X <- cbind(Intercept=1, datMissing[, 2:(obsIndex-1)])
 #-------------------
 
+t0 <- Sys.time()
 iterationEM(datSpline)
-table(obsVec)
 Sys.time()-t0
+
+table(obsVec)

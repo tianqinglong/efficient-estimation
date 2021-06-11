@@ -69,7 +69,9 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 		betaNew <- betaSigmaNew[1:length(betaVec)]
 		sigmaNew <- betaSigmaNew[length(betaSigmaNew)]
 
-		loglik1 <- betaTargetFunc_OnlyY(c(betaNew, sigmaNew), betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
+		# loglik1 <- betaTargetFunc_OnlyY(c(betaNew, sigmaNew), betaVec, sigmaSCL, tauVec, mat_non_missing_X, mat_Spline, mat_X, yVec)
+
+		loglik1 <- betaLogLik(betaNew, sigmaNew, mat_non_missing_X, mat_X, yVec, condProb)
 
 		## Check convergence
 		newlogLik <- loglik1+loglik2
@@ -84,7 +86,7 @@ iterationEM <- function(datSpline, max_iter = 500, tol = 1e-4)
 			diff <- abs(loglikSum-newlogLik)/abs(loglikSum)
 		}
 
-		print(paste("Iteration ", iter,": Change=", 100*diff, "%; Sigma=", format(round(sigmaNew, 4), nsmall = 4), "; Max_Beta=", format(round(max(betaNew), 4), nsmall = 4), "; Max_Tau=", format(round(max(tauNew), 2), nsmall = 2), sep = ""))
+		print(paste("Iteration ", iter,": Change=", format(round(100*diff, 4), nsmall = 4), "%; Sigma=", format(round(sigmaNew, 4), nsmall = 4), "; Max_Beta=", format(round(max(betaNew), 4), nsmall = 4), "; Max_Tau=", format(round(max(tauNew), 2), nsmall = 2), sep = ""))
 
 		if (diff < tol)
 		{
