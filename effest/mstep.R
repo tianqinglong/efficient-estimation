@@ -139,7 +139,7 @@ betaTargetFuncMax_LM_light <- function(condProbMat, X_obs_mat, mat_spline, X_mis
   # glm(Y~0+., data = dat, weights = WeightVec, family=gaussian(link = "identity")) -> lmFit
 
   wts <- sqrt(WeightVec)
-  lmFit <- .Call(stats:::C_Cdqrls, X_new*wts, Y_new*wts, 1e-4, FALSE)
+  lmFit <- .Call(stats:::C_Cdqrls, X_new*wts, Y_new*wts, 1e-6, FALSE)
 
   betaNew <- lmFit$coefficients
   sigmaNew <- sqrt(sum(WeightVec*lmFit$residuals^2)/sum(WeightVec))
