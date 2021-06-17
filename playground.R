@@ -228,14 +228,14 @@ Rcpp::sourceCpp("effest/lmloglik.cpp")
 missParam <- c(-1, 1, 0.8) # parameters for function yTransFunc2()
 
 
-n <- 100
+n <- 500
 xx <- rnorm(n, 0, 0.5)
 xx <- as.matrix(xx, ncol = 1)
 xMat <- cbind(1, xx)
 
 betaVal <- c(3, -3.5)
 
-yy <- ySimulatorLM(xMat, betaVal, sd <- 1)
+yy <- ySimulatorLM(xMat, betaVal, sd=1)
 obsVec <- numeric(n)
 
 FUN <- yTransFunc3
@@ -249,7 +249,7 @@ for (i in 1:length(obsVec))
 num_of_sieve <- 3
 dat <- data.frame(Y = yy, Z = xx, Obs = obsVec)
 datSpline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
-
+table(obsVec)
 #-------------------
 # datNonMissing <- datSpline[datSpline$Obs == 1,]
 # datMissing <- datSpline[datSpline$Obs == 0,]
@@ -271,6 +271,15 @@ datSpline <- AddBsplineColumn(dat, splinesForY, num_of_sieve, 2)
 
 t0 <- Sys.time()
 iterationEM(datSpline)
+
+lm(yy~0+xMat)
+
+dat_no_missing <- dat[dat$Obs == 1,]
+
+lm(Y~Z, data = dat_no_missing) -> fittemp
+summary(fittemp)
+
+iterationEM_2(datSpline)
 Sys.time()-t0
 
 table(obsVec)
