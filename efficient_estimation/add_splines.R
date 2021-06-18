@@ -18,6 +18,11 @@ AppendSplines <- function(dat_list, bn, q)
   
   delta <- quantile(yObs, probs = seq(0, 1, length.out = (bn+2))[2:(bn+1)])
   delta <- c(rep(0, q), delta, rep(1, q+2))
+  
+  dat_list$delta <- delta
+  dat_list$bn <- bn
+  dat_list$q <- q
+  
   for (i in 1:length(yObs))
   {
     bs_y[i,] <- BSplinesForNewY(yObs[i], q, bn, delta)
@@ -25,10 +30,11 @@ AppendSplines <- function(dat_list, bn, q)
   colnames(bs_y) <- paste("bs", 1:(bn+q), sep="")
   dat_list$bs_y <- bs_y
   
+  
   # B-splines for U (Use all U, not only the U with non-missing Y)
   posi_u <- dat_list$U_indices
   ## If there is no u
-  if (posi_u < 0)
+  if (is.null(posi_u))
   {
     return(dat_list)
   }
