@@ -1,3 +1,7 @@
+source("simulate_data.R")
+Rcpp::sourceCpp("bspline_recursive.cpp")
+source("add_splines.R")
+
 n <- 100
 X <- matrix(rnorm(2*n), ncol = 2)
 Z <- X[,1]
@@ -15,4 +19,4 @@ colnames(dat) <- c("Y", "Obs", "Z", "U")
 
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
 
-AppendSplines(df_MNAR, 5,3)
+AppendSplines(df_MNAR, 3,3)
