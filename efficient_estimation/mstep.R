@@ -1,3 +1,7 @@
+#-----------------------
+# Reorganize the dataset
+#-----------------------
+
 MakeFullDataSetObs <- function(dataList)
 # This function is to make a data frame for the M-step for the non-missing data
 {
@@ -145,4 +149,105 @@ MakeFullDataSetMissing <- function(dataList, rules, betaOld, sigmaOld, tauOld)
   
   colnames(bsMatMissDat) <- c("Y", "Weights", zNames, uNames, paste("bs", 1:(bn+q)^(nu+1), sep = ""))
   return(bsMatMissDat)
+}
+
+#-----------------------
+# Use glm to do the estimation
+#-----------------------
+
+MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
+{
+  # Beta and Sigma Part
+  if (nu > 0)
+  {
+    allU <- paste("U", 1:nu, sep = "")
+  }
+  else
+  {
+    allU <- NULL
+  }
+  
+  if (nz > 0)
+  {
+    allZ <- paste("Z", 1:nz, sep = "")
+  }
+  else
+  {
+    allZ <- NULL
+  }
+    
+  matAllFull <- as.data.frame(rbind(matObsFull, matMissFull))
+  Y1 <- log(matAllFull[,"Y"]/(1-matAllFull[,"Y"]))
+  matAllFull <- cbind(matAllFull, Y1)
+  
+  fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allU,allZ), collapse = "+")))
+  f1 <- lm(formula = fmla1, weights = Weight, data = matAllFull)
+  betaNew <- f1$coefficients
+  sigmaNew <- sqrt(sum(matAllFull$Weight*f1$residuals^2)/sum(matAllFull$Weight))
+  
+  # Tau Part
+  Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
+  matAllFull <- cbind(matAllFull, Y2)
+  
+  fmla2 <- as.formula(paste("Y2 ~ 0+", paste(paste("bs", 1:nsieve, sep = ""), collapse = "+")))
+  f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "logit"), data = matAllFull)
+  tauNew <- f2$coefficients
+  
+  return(list(Beta = betaNew, Sigma = sigmaNew, Tau = tauNew))
+}
+
+#-----------------------
+# EM Algorithm Iteration Function
+#-----------------------
+# df_MNAR: is the list without splines. Only with Y, Obs, X and info about U and Z
+main <- function(df_MNAR, beta_init, sigma_init, tau_init,
+                 bn = 4, q = 2, gaussHermiteNodes = 10,
+                 max_iter = 200, tol = 1e-4)
+{
+  rules <- fastGHQuad::gaussHermiteData(gaussHermiteNodes)
+  datList <- AppendSplines(df_MNAR, bn, q)
+  nu <- length(df_MNAR$U_indices)
+  nz <- length(df_MNAR$Z_indices)
+  
+  iter <- 1
+  SUCCESS <- 0
+  df1 <- MakeFullDataSetObs(datList)
+  beta_old <- beta_init
+  sigma_old <- sigma_init
+  tau_old <- tau_init
+  while(iter <= max_iter & !SUCCESS)
+  {
+    df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
+    newList <- MStep_1Step(df1, df2, nu, nz, bn+q)
+    
+    beta_new <- newList$Beta
+    sigma_new <- newList$Sigma
+    tau_new <- newList$Tau
+    
+    max_abs <- max(abs(beta_new-beta_old), abs(sigma_new-sigma_old), abs(tau_new-tau_old))
+    dis <- max_abs^2
+    
+    if (dis < tol)
+    {
+      SUCCESS <- 1
+    }
+    
+    print(paste(paste("iter ", iter, ":", sep = ""), "distance=", dis, ";"))
+    
+    beta_old <- beta_new
+    sigma_old <- sigma_new
+    tau_old <- tau_new
+    
+    iter <- iter+1
+  }
+  
+  if (SUCCESS)
+  {
+    print(beta_old)
+    print(sigma_old)
+  }
+  else
+  {
+    print("Failed to converge!")
+  }
 }

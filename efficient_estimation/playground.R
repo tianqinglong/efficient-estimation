@@ -54,8 +54,47 @@ tauOld <- rnorm(length(ubsMat))
 PseudoObservation(yVec, w, 2, 2.4, xBS,  delta, bn, q, tauOld)
 
 # Test Make Dataset
-MakeFullDataSetMissing(datList, rules, betaOld, sigmaOld, tauOld)
 
-#
-df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
 AppendSplines(df_MNAR, bn = 3, q = 3) -> datList
+df1 <- MakeFullDataSetObs(datList)
+df2 <- MakeFullDataSetMissing(datList, rules, betaOld, sigmaOld, tauOld)
+
+# Test MStep function
+
+n <- 2000
+X <- matrix(rnorm(2*n), ncol = 2)
+Z <- X
+U <- NULL
+
+coef1 <- c(1, -1, 1)
+Y <- simuY(cbind(1, X), coef1, 1)
+
+YU <- cbind(1, Y, U)
+coef2 <- c(1, -3)
+Obs <- simuMiss(YU, coef2)
+
+yObs <- Y[which(Obs == 1)]
+xObs <- X[which(Obs == 1),]
+
+lmobs <- lm(log(yObs/(1-yObs))~xObs)
+beta_init <- lmobs$coefficients
+sigma_init <- sigma(lmobs)
+
+dat <- cbind(Y, Obs, Z, U)
+colnames(dat) <- c("Y", "Obs", "X1", "X2")
+df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+# datList <- AppendSplines(df_MNAR, 3, 3)
+# rules <- fastGHQuad::gaussHermiteData(10)
+# 
+# df1 <- MakeFullDataSetObs(datList)
+# df2 <- MakeFullDataSetMissing(datList,rules,c(0.8, -0.5, 0.8), 0.7, rnorm(6))
+# 
+# nu <- 0
+# nz <- 2
+# nsieve <- 6
+# 
+# MStep(df1, df2, nu, nz, nsieve)
+
+main(df_MNAR, beta_init, sigma_init, rep(0, 6))
+main(df_MNAR, c(.5, -.5, .5), .5, rep(0, 6))
