@@ -147,7 +147,7 @@ MakeFullDataSetMissing <- function(dataList, rules, betaOld, sigmaOld, tauOld)
     uNames <- paste("U",1:length(uIndices), sep = "")
   }
   
-  colnames(bsMatMissDat) <- c("Y", "Weights", zNames, uNames, paste("bs", 1:(bn+q)^(nu+1), sep = ""))
+  colnames(bsMatMissDat) <- c("Y", "Weight", zNames, uNames, paste("bs", 1:(bn+q)^(nu+1), sep = ""))
   return(bsMatMissDat)
 }
 
@@ -181,9 +181,15 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   matAllFull <- cbind(matAllFull, Y1)
   
   fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allU,allZ), collapse = "+")))
-  f1 <- lm(formula = fmla1, weights = Weight, data = matAllFull)
+  matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)),]
+  f1 <- lm(formula = fmla1, weights = Weight, data = matAllFullSub)
   betaNew <- f1$coefficients
-  sigmaNew <- sqrt(sum(matAllFull$Weight*f1$residuals^2)/sum(matAllFull$Weight))
+  sigmaNew <- sqrt(sum(matAllFullSub$Weight*f1$residuals^2, na.rm = T)/sum(matAllFullSub$Weight, na.rm = T))
+  
+  # if(is.nan(sigmaNew))
+  # {
+  #   browser()
+  # }
   
   # Tau Part
   Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
@@ -201,7 +207,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
 #-----------------------
 # df_MNAR: is the list without splines. Only with Y, Obs, X and info about U and Z
 main <- function(df_MNAR, beta_init, sigma_init, tau_init,
-                 bn = 4, q = 2, gaussHermiteNodes = 10,
+                 bn = 3, q = 3, gaussHermiteNodes = 10,
                  max_iter = 200, tol = 1e-4)
 {
   rules <- fastGHQuad::gaussHermiteData(gaussHermiteNodes)
@@ -218,21 +224,29 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
+    
     newList <- MStep_1Step(df1, df2, nu, nz, bn+q)
     
     beta_new <- newList$Beta
     sigma_new <- newList$Sigma
     tau_new <- newList$Tau
     
-    max_abs <- max(abs(beta_new-beta_old), abs(sigma_new-sigma_old), abs(tau_new-tau_old))
-    dis <- max_abs^2
+    # if(sum(is.na(beta_new)) > 0 | is.na(sigma_new) | sum(is.na(tau_new)) > 0)
+    # {
+    #   browser()
+    # }
+    
+    dis <- sum((beta_new-beta_old)^2)+sum((sigma_new-sigma_old)^2)
     
     if (dis < tol)
     {
       SUCCESS <- 1
     }
     
-    print(paste(paste("iter ", iter, ":", sep = ""), "distance=", dis, ";"))
+    if (iter %% 5 == 0)
+    {
+      print(paste(paste("iter ", iter, ":", sep = ""), "distance=", round(dis, digits = 6)))
+    }
     
     beta_old <- beta_new
     sigma_old <- sigma_new
@@ -243,11 +257,16 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   
   if (SUCCESS)
   {
+    print("EM algorithm converges!")
     print(beta_old)
     print(sigma_old)
   }
   else
   {
     print("Failed to converge!")
+    print(beta_old)
+    print(sigma_old)
   }
+  
+  return(newList)
 }

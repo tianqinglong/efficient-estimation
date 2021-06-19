@@ -4,10 +4,10 @@
 # Date: June 17, 2021
 #-----------------------
 
-simuY_LM <- function(X, coef, sd)
+simuY_LM <- function(X, coef, sd=1)
 {
   coef <- matrix(coef, ncol = 1)
-  return(X%*%coef+rnorm(nrow(X), 0, sd))
+  return(X%*%coef+as.matrix(sd*rnorm(nrow(X))))
 }
 
 simuY <- function(X, coef, sd)

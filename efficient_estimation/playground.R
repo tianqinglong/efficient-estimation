@@ -1,89 +1,69 @@
 source("simulate_data.R")
 Rcpp::sourceCpp("bspline_recursive.cpp")
 source("add_splines.R")
+source("estep.R")
+source("mstep.R")
 
-# Test data generating functions
-
-n <- 100
-X <- matrix(rnorm(2*n), ncol = 2)
-Z <- X[,1]
-U <- X[,2]
-
-coef1 <- c(1, -1, 1)
-Y <- simuY(cbind(1, X), coef1, 1)
-
-YU <- cbind(1, Y, U)
-coef2 <- c(1, -2, 1)
-Obs <- simuMiss(YU, coef2)
-
-dat <- cbind(Y, Obs, Z, U)
-colnames(dat) <- c("Y", "Obs", "Z", "U")
-
-df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
-
-AppendSplines(df_MNAR, 3,3) -> datList
-
-# Test "YSplinePrep"
-
-xVec <- c(1, 1.5, 2)
-rules <- gaussHermiteData(10)
-q <- 3
-bn <- 3
-delta <- seq(0, 1, length.out = bn+2)
-delta <- c(rep(0, q-1), delta, rep(1, q+1))
-betaOld <- c(1, 1, 1)
-sigmaOld <- 1
-
-YSplinePrep(xVec, rules, delta, bn, q, betaOld, sigmaOld)
-
-# Test YUSplinePrep
-
-x <- datList$bs_u1[1,]
-xBS <- as.matrix(x)
-yBS <- datList$bs_y[1,]
-
-YUSplinePrep(yBS, xBS)
-
-# Test PseudoObservation
-
-yVec <- runif(10)
-w <- rules$w
-ubsMat <- YUSplinePrep(yBS, xBS)
-tauOld <- rnorm(length(ubsMat))
-
-PseudoObservation(yVec, w, 2, 2.4, xBS,  delta, bn, q, tauOld)
-
-# Test Make Dataset
-
-df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
-AppendSplines(df_MNAR, bn = 3, q = 3) -> datList
-df1 <- MakeFullDataSetObs(datList)
-df2 <- MakeFullDataSetMissing(datList, rules, betaOld, sigmaOld, tauOld)
+# # Test data generating functions
+# 
+# n <- 100
+# X <- matrix(rnorm(2*n), ncol = 2)
+# Z <- X[,1]
+# U <- X[,2]
+# 
+# coef1 <- c(1, -1, 1)
+# Y <- simuY(cbind(1, X), coef1, 1)
+# 
+# YU <- cbind(1, Y, U)
+# coef2 <- c(1, -2, 1)
+# Obs <- simuMiss(YU, coef2)
+# 
+# dat <- cbind(Y, Obs, Z, U)
+# colnames(dat) <- c("Y", "Obs", "Z", "U")
+# 
+# df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
+# 
+# AppendSplines(df_MNAR, 3,3) -> datList
+# 
+# # Test "YSplinePrep"
+# 
+# xVec <- c(1, 1.5, 2)
+# rules <- gaussHermiteData(10)
+# q <- 3
+# bn <- 3
+# delta <- seq(0, 1, length.out = bn+2)
+# delta <- c(rep(0, q-1), delta, rep(1, q+1))
+# betaOld <- c(1, 1, 1)
+# sigmaOld <- 1
+# 
+# YSplinePrep(xVec, rules, delta, bn, q, betaOld, sigmaOld)
+# 
+# # Test YUSplinePrep
+# 
+# x <- datList$bs_u1[1,]
+# xBS <- as.matrix(x)
+# yBS <- datList$bs_y[1,]
+# 
+# YUSplinePrep(yBS, xBS)
+# 
+# # Test PseudoObservation
+# 
+# yVec <- runif(10)
+# w <- rules$w
+# ubsMat <- YUSplinePrep(yBS, xBS)
+# tauOld <- rnorm(length(ubsMat))
+# 
+# PseudoObservation(yVec, w, 2, 2.4, xBS,  delta, bn, q, tauOld)
+# 
+# # Test Make Dataset
+# 
+# df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
+# AppendSplines(df_MNAR, bn = 3, q = 3) -> datList
+# df1 <- MakeFullDataSetObs(datList)
+# df2 <- MakeFullDataSetMissing(datList, rules, betaOld, sigmaOld, tauOld)
 
 # Test MStep function
 
-n <- 2000
-X <- matrix(rnorm(2*n), ncol = 2)
-Z <- X
-U <- NULL
-
-coef1 <- c(1, -1, 1)
-Y <- simuY(cbind(1, X), coef1, 1)
-
-YU <- cbind(1, Y, U)
-coef2 <- c(1, -3)
-Obs <- simuMiss(YU, coef2)
-
-yObs <- Y[which(Obs == 1)]
-xObs <- X[which(Obs == 1),]
-
-lmobs <- lm(log(yObs/(1-yObs))~xObs)
-beta_init <- lmobs$coefficients
-sigma_init <- sigma(lmobs)
-
-dat <- cbind(Y, Obs, Z, U)
-colnames(dat) <- c("Y", "Obs", "X1", "X2")
-df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 # datList <- AppendSplines(df_MNAR, 3, 3)
 # rules <- fastGHQuad::gaussHermiteData(10)
 # 
@@ -96,5 +76,62 @@ df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 # 
 # MStep(df1, df2, nu, nz, nsieve)
 
-main(df_MNAR, beta_init, sigma_init, rep(0, 6))
-main(df_MNAR, c(.5, -.5, .5), .5, rep(0, 6))
+n <- 500
+X <- matrix(rnorm(2*n, sd = 2), ncol = 2)
+Z <- X
+U <- NULL
+
+coef1 <- c(1, -2, 2)
+std <- 1
+Y <- simuY(cbind(1, X), coef1, std)
+yy <- log(Y/(1-Y))
+
+YU <- cbind(1, yy, yy^2)
+coef2 <- c(2, -3, -.5)
+Obs <- simuMiss(YU, coef2)
+
+table(Obs)
+
+yObs <- Y[which(Obs == 1)]
+xObs <- X[which(Obs == 1),]
+
+# Only use non-missing data
+yLM <- log(yObs/(1-yObs))
+
+obsLM <- lm(yLM~xObs)
+beta_init <- obsLM$coefficients
+sigma_init <- sigma(obsLM)
+
+# Oracle
+oracleLM <- lm(yy~X)
+beta_oracle <- oracleLM$coefficients
+sigma_oracle <- sigma(oracleLM)
+
+# EM
+dat <- cbind(Y, Obs, Z, U)
+colnames(dat) <- c("Y", "Obs", "X1", "X2")
+df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+
+bn <- 4
+q <- 3
+
+EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
+                    bn, q, gaussHermiteNodes = 10, tol = 1e-4)
+
+# Proportion of missing
+table(Obs)
+
+# EM algorithm
+EM_estimate[1:2]
+
+# Only non-missing data
+beta_init
+sigma_init
+
+# Oracle (use all data)
+beta_oracle
+sigma_oracle
+
+# True
+coef1
+std

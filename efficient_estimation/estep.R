@@ -71,7 +71,11 @@ PseudoObservation <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
     
     de <- de+w[i]*exp_tauB_inv/sqrt(pi)
   }
-  Weights <- realWeight/de
+  Weight <- realWeight/de
+  # if(sum(is.nan(Weight))>0)
+  # {
+  #   browser()
+  # }
   Y <- exp(y)/(1+exp(y))
   colnames(B_yu) <- paste("bs", 1:ncol(B_yu), sep = "")
   
@@ -95,5 +99,5 @@ PseudoObservation <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
     colnames(UMat) <- paste("U", 1:length(U), sep = "")
   }
   
-  return(cbind(Y, Weights, ZMat, UMat, B_yu))
+  return(cbind(Y, Weight, ZMat, UMat, B_yu))
 }
