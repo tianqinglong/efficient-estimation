@@ -210,7 +210,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
                  bn = 3, q = 3, gaussHermiteNodes = 10,
                  max_iter = 200, tol = 1e-4)
 {
-  rules <- fastGHQuad::gaussHermiteData(gaussHermiteNodes)
+  rules <- gaussHermiteData(gaussHermiteNodes)
   datList <- AppendSplines(df_MNAR, bn, q)
   nu <- length(df_MNAR$U_indices)
   nz <- length(df_MNAR$Z_indices)
@@ -243,7 +243,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
       SUCCESS <- 1
     }
     
-    if (iter %% 5 == 0)
+    if (iter %% 5 == 0 | iter == 1)
     {
       print(paste(paste("iter ", iter, ":", sep = ""), "distance=", round(dis, digits = 6)))
     }

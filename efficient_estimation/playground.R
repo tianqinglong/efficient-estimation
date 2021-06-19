@@ -1,3 +1,4 @@
+library(fastGHQuad)
 source("simulate_data.R")
 Rcpp::sourceCpp("bspline_recursive.cpp")
 source("add_splines.R")
@@ -76,7 +77,7 @@ source("mstep.R")
 # 
 # MStep(df1, df2, nu, nz, nsieve)
 
-n <- 500
+n <- 5000
 X <- matrix(rnorm(2*n, sd = 2), ncol = 2)
 Z <- X
 U <- NULL
@@ -87,7 +88,7 @@ Y <- simuY(cbind(1, X), coef1, std)
 yy <- log(Y/(1-Y))
 
 YU <- cbind(1, yy, yy^2)
-coef2 <- c(2, -3, -.5)
+coef2 <- c(2, -3, -1)
 Obs <- simuMiss(YU, coef2)
 
 table(Obs)
@@ -112,11 +113,11 @@ dat <- cbind(Y, Obs, Z, U)
 colnames(dat) <- c("Y", "Obs", "X1", "X2")
 df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 
-bn <- 4
+bn <- 8
 q <- 3
 
 EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
-                    bn, q, gaussHermiteNodes = 10, tol = 1e-4)
+                    bn, q, gaussHermiteNodes = 13, tol = 1e-4)
 
 # Proportion of missing
 table(Obs)
