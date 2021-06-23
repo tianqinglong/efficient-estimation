@@ -78,19 +78,22 @@ source("mstep.R")
 # 
 # MStep(df1, df2, nu, nz, nsieve)
 
+## Generate data
 n <- 3000
 X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
 Z <- X
 U <- NULL
 
+## Data model
 coef1 <- c(1, -2, 2)
 std <- 1
-Y <- simuY(cbind(1, X), coef1, std)
-yy <- log(Y/(1-Y))
+Y <- simuY(cbind(1, X), coef1, std) # (0, 1)
+yy <- log(Y/(1-Y)) # (-inf, inf)
 
-YU <- cbind(yy, sin(10*yy))
-coef2 <- c(1, 2)
-Obs <- simuMiss(YU, coef2)
+## Missing model
+YU <- cbind(yy, sin(2*pi*yy))
+coef2 <- c(1, 1)
+Obs <- simuMiss(YU, coef2) # 1: observed; 0: missing
 
 table(Obs)
 
@@ -122,7 +125,7 @@ bn <- 3
 q <- 3
 
 EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
-                    bn, q, gaussHermiteNodes = 8, tol = 1e-4)
+                    bn, q, gaussHermiteNodes = 10, tol = 1e-4)
 
 # Proportion of missing
 table(Obs)

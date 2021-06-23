@@ -1,10 +1,13 @@
-library(fastGHQuad)
+# library(fastGHQuad)
 # gaussHermiteData(10)
 
 #-----------------------
 # Use Gauss-Hermite to Expand the Expectation
 # Author: Qinglong Tian
 # Date: June 18, 2021
+#-----------------------
+# library(fastGHQuad)
+# gaussHermiteData(10)
 #-----------------------
 
 # Input: data list, number of nodes, old beta (sigma), new beta (sigma), old tau
