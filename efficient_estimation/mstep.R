@@ -181,10 +181,15 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   matAllFull <- cbind(matAllFull, Y1)
   
   fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allU,allZ), collapse = "+")))
-  matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)),]
+  matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)) & ! is.nan(matAllFull$Weight) ,]
   f1 <- lm(formula = fmla1, weights = Weight, data = matAllFullSub)
   betaNew <- f1$coefficients
   sigmaNew <- sqrt(sum(matAllFullSub$Weight*f1$residuals^2, na.rm = T)/sum(matAllFullSub$Weight, na.rm = T))
+  
+  # if (length(matAllFullSub$Weight) != length(f1$residuals))
+  # {
+  #   browser()
+  # }
   
   # if(is.nan(sigmaNew))
   # {
@@ -195,8 +200,10 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
   matAllFull <- cbind(matAllFull, Y2)
   
+  matAllFullComp <- matAllFull[complete.cases(matAllFull),]
+  
   fmla2 <- as.formula(paste("Y2 ~ 0+", paste(paste("bs", 1:nsieve, sep = ""), collapse = "+")))
-  f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "logit"), data = matAllFull)
+  f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "logit"), data = matAllFullComp)
   tauNew <- f2$coefficients
   
   return(list(Beta = betaNew, Sigma = sigmaNew, Tau = tauNew))

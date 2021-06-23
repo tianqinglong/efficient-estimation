@@ -1,4 +1,5 @@
 library(fastGHQuad)
+library(tidyverse)
 source("simulate_data.R")
 Rcpp::sourceCpp("bspline_recursive.cpp")
 source("add_splines.R")
@@ -77,8 +78,8 @@ source("mstep.R")
 # 
 # MStep(df1, df2, nu, nz, nsieve)
 
-n <- 5000
-X <- matrix(rnorm(2*n, sd = 2), ncol = 2)
+n <- 3000
+X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
 Z <- X
 U <- NULL
 
@@ -87,8 +88,8 @@ std <- 1
 Y <- simuY(cbind(1, X), coef1, std)
 yy <- log(Y/(1-Y))
 
-YU <- cbind(1, yy, yy^2)
-coef2 <- c(2, -3, -1)
+YU <- cbind(yy, sin(10*yy))
+coef2 <- c(1, 2)
 Obs <- simuMiss(YU, coef2)
 
 table(Obs)
@@ -108,16 +109,20 @@ oracleLM <- lm(yy~X)
 beta_oracle <- oracleLM$coefficients
 sigma_oracle <- sigma(oracleLM)
 
+dat_df <- as.data.frame(dat)
+dat_df %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
+  ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha=0.5)
+
 # EM
 dat <- cbind(Y, Obs, Z, U)
 colnames(dat) <- c("Y", "Obs", "X1", "X2")
 df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 
-bn <- 8
+bn <- 3
 q <- 3
 
 EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
-                    bn, q, gaussHermiteNodes = 13, tol = 1e-4)
+                    bn, q, gaussHermiteNodes = 8, tol = 1e-4)
 
 # Proportion of missing
 table(Obs)
