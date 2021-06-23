@@ -228,10 +228,10 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   beta_old <- beta_init
   sigma_old <- sigma_init
   tau_old <- tau_init
+  
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
-    
     newList <- MStep_1Step(df1, df2, nu, nz, bn+q)
     
     beta_new <- newList$Beta
@@ -265,15 +265,16 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   if (SUCCESS)
   {
     print("EM algorithm converges!")
-    print(beta_old)
-    print(sigma_old)
+    # print(beta_old)
+    # print(sigma_old)
   }
   else
   {
     print("Failed to converge!")
-    print(beta_old)
-    print(sigma_old)
+    # print(beta_old)
+    # print(sigma_old)
   }
   
+  newList[["Success"]] <- SUCCESS
   return(newList)
 }

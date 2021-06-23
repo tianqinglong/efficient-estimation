@@ -1,6 +1,3 @@
-# library(fastGHQuad)
-# gaussHermiteData(10)
-
 #-----------------------
 # Use Gauss-Hermite to Expand the Expectation
 # Author: Qinglong Tian
