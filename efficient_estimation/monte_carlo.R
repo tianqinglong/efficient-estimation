@@ -13,6 +13,32 @@ source("estep.R")
 source("mstep.R")
 source("parallel.R")
 #-----------------------
+# Auxiliary functions
+#-----------------------
+monteCarloInDataFrame <- function(monteCarloResults)
+{
+  BetaEM <- t(sapply(monteCarloResults, function(x) {x$Beta_EM}))
+  colnames(BetaEM) <- c("Beta0_EM", "Beta1_EM", "Beta2_EM")
+  BetaNM <- t(sapply(monteCarloResults, function(x) {x$Beta_NM}))
+  colnames(BetaNM) <- c("Beta0_NM", "Beta1_NM", "Beta2_NM")
+  BetaOR <- t(sapply(monteCarloResults, function(x) {x$Beta_OR}))
+  colnames(BetaOR) <- c("Beta0_OR", "Beta1_OR", "Beta2_OR")
+  BetaTotal <- cbind(BetaEM, BetaNM, BetaOR)
+  
+  SigmaEM <- sapply(monteCarloResults, function(x) {x$Sigma_EM})
+  SigmaNM <- sapply(monteCarloResults, function(x) {x$Sigma_NM})
+  SigmaOR <- sapply(monteCarloResults, function(x) {x$Sigma_OR})
+  SigmaTotal <- cbind(SigmaEM, SigmaNM, SigmaOR)
+  colnames(SigmaTotal) <- c("Sigma_EM", "Sigma_NM", "Sigma_OR")
+  
+  Convergence <- sapply(monteCarloResults, function(x) {x$Convergence})
+  NumMissing <- sapply(monteCarloResults, function(x) {x$Num_Miss})
+  MissingProportion <- sapply(monteCarloResults, function(x) {x$Prop_Miss})
+  
+  output <- cbind(BetaTotal, SigmaTotal, Convergence, NumMissing, MissingProportion)
+  
+  return(output)
+}
 
 #-----------------------
 # Single trial
@@ -87,7 +113,7 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 
 #-----------------------
 # Monte Carlo Using the same setting as the single trial
-# Use Linux, not working under Windows
+# mclapply not working under Windows (use mclapply)
 #-----------------------
 
 B <- 20
@@ -144,22 +170,4 @@ monteCarloResults <- lapply(df_MNAR_list, function(x)
 }
 )
 
-BetaEM <- t(sapply(monteCarloResults, function(x) {x$Beta_EM}))
-colnames(BetaEM) <- c("Beta0_EM", "Beta1_EM", "Beta2_EM")
-BetaNM <- t(sapply(monteCarloResults, function(x) {x$Beta_NM}))
-colnames(BetaNM) <- c("Beta0_NM", "Beta1_NM", "Beta2_NM")
-BetaOR <- t(sapply(monteCarloResults, function(x) {x$Beta_OR}))
-colnames(BetaOR) <- c("Beta0_OR", "Beta1_OR", "Beta2_OR")
-BetaTotal <- cbind(BetaEM, BetaNM, BetaOR)
-SigmaEM <- sapply(monteCarloResults, function(x) {x$Sigma_EM})
-SigmaNM <- sapply(monteCarloResults, function(x) {x$Sigma_NM})
-SigmaOR <- sapply(monteCarloResults, function(x) {x$Sigma_OR})
-SigmaTotal <- cbind(SigmaEM, SigmaNM, SigmaOR)
-colnames(SigmaTotal) <- c("Sigma_EM", "Sigma_NM", "Sigma_OR")
-Convergence <- sapply(monteCarloResults, function(x) {x$Convergence})
-NumMissing <- sapply(monteCarloResults, function(x) {x$Num_Miss})
-MissingProportion <- sapply(monteCarloResults, function(x) {x$Prop_Miss})
-
-output <- cbind(BetaTotal, SigmaTotal, Convergence, NumMissing, MissingProportion)
-
-output
+monteCarloInDataFrame(monteCarloResults)
