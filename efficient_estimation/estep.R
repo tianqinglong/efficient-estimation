@@ -72,10 +72,10 @@ PseudoObservation <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
     de <- de+w[i]*exp_tauB_inv/sqrt(pi)
   }
   Weight <- realWeight/de
-  if(sum(is.nan(Weight))>0)
-  {
-    browser()
-  }
+  # if(sum(is.nan(Weight))>0)
+  # {
+  #   browser()
+  # }
   Y <- exp(y)/(1+exp(y))
   colnames(B_yu) <- paste("bs", 1:ncol(B_yu), sep = "")
   
