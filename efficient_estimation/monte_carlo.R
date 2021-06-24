@@ -46,16 +46,16 @@ monteCarloInDataFrame <- function(monteCarloResults)
 #-----------------------
 
 # Hyper-parameters
-n <- 120
+n <- 5000
 
-ratio <- 4
+ratio <- 2
 
-pr_non_missing <- 0.7 # does not mean proportion of non-missing rate, but can be used to control the missing rate
+pr_non_missing <- 0.8 # does not mean proportion of non-missing rate, but can be used to control the missing rate
 uni_radius_1 <- 2 # control how spread-out X1 is
 uni_radius_2 <- 2 # control how spread-out X2 is
 std <- uni_radius_1/ratio # standard deviation (sigma) of the linear data model
-bn <- 2 # interior knots
-q <- 2 # order of basis-spline
+bn <- 3 # interior knots
+q <- 3 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
 max_iter <- 200
 tol <- 1e-4
@@ -76,7 +76,7 @@ U <- NULL # \pi(Y)
 # Missing model
 yy <- log(Y/(1-Y))
 YU <- cbind(yy, sin(2*pi*yy))
-coef2 <- c(1, 0.25)
+coef2 <- c(2, 0.25)
 Obs <- simuMiss(YU, coef2)
 
 
