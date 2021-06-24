@@ -12,6 +12,7 @@ source("add_splines.R")
 source("estep.R")
 source("mstep.R")
 source("parallel.R")
+source("variance.R")
 #-----------------------
 # Auxiliary functions
 #-----------------------
@@ -45,7 +46,7 @@ monteCarloInDataFrame <- function(monteCarloResults)
 #-----------------------
 
 # Hyper-parameters
-n <- 100
+n <- 1000
 pr_non_missing <- 0.8 # does not mean 10% missing rate, but can be use to control the missing rate
 uni_radius_1 <- 2 # control how spread-out X1 is
 uni_radius_2 <- 2 # control how spread-out X2 is
@@ -111,12 +112,16 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
             paste("the proportion of missing is",
                   paste(100*table(Obs)[1]/n,"%.", sep=""))))
 
+# Variance estimation
+ProfileCov(df_MNAR, n, 0.5, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau,
+           bn, q, gHNodes, max_iter, tol) -> varEst
+
 #-----------------------
 # Monte Carlo Using the same setting as the single trial
 # mclapply not working under Windows (use mclapply)
 #-----------------------
 
-B <- 20
+B <- 200
 
 df_MNAR_list <- mclapply(1:B, function(x)
 {
@@ -170,4 +175,6 @@ monteCarloResults <- lapply(df_MNAR_list, function(x)
 }
 )
 
-monteCarloInDataFrame(monteCarloResults)
+MCResults <- monteCarloInDataFrame(monteCarloResults)
+ThetaMat <- MCResults[,c("Beta0_EM", "Beta1_EM", "Beta2_EM", "Sigma_EM")]
+cov(ThetaMat)

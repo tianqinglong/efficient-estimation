@@ -79,7 +79,7 @@ source("mstep.R")
 # MStep(df1, df2, nu, nz, nsieve)
 
 ## Generate data
-n <- 3000
+n <- 2000
 X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
 Z <- X
 U <- NULL
@@ -125,7 +125,7 @@ bn <- 3
 q <- 3
 
 EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
-                    bn, q, gaussHermiteNodes = 10, tol = 1e-4)
+                    bn, q, gaussHermiteNodes = 8, tol = 1e-4)
 
 # Proportion of missing
 table(Obs)
@@ -144,3 +144,6 @@ sigma_oracle
 # True
 coef1
 std
+
+ProfileEM(df_MNAR, EM_estimate$Beta, EM_estimate$Sigma, rep(0, bn+q),
+          bn, q, gaussHermiteNodes = 8, tol = 1e-4)

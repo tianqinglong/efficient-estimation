@@ -177,7 +177,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   }
     
   matAllFull <- as.data.frame(rbind(matObsFull, matMissFull))
-  Y1 <- log(matAllFull[,"Y"]/(1-matAllFull[,"Y"]))
+  Y1 <- log(matAllFull[,"Y"])-log(1-matAllFull[,"Y"])
   matAllFull <- cbind(matAllFull, Y1)
   
   fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allU,allZ), collapse = "+")))
