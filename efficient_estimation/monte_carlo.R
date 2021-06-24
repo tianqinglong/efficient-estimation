@@ -46,12 +46,12 @@ monteCarloInDataFrame <- function(monteCarloResults)
 #-----------------------
 
 # Hyper-parameters
-n <- 1000
+n <- 80
 pr_non_missing <- 0.8 # does not mean 10% missing rate, but can be use to control the missing rate
 uni_radius_1 <- 2 # control how spread-out X1 is
 uni_radius_2 <- 2 # control how spread-out X2 is
 std <- 1 # standard deviation (sigma) of the linear data model
-bn <- 3 # interior knots
+bn <- 2 # interior knots
 q <- 3 # order of basis-spline
 gHNodes <- 9 # Gauss-Hermite nodes
 max_iter <- 200
@@ -88,6 +88,8 @@ dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
 # EM algorithm
 df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
+emEstimate$Beta
+emEstimate$Sigma
 
 # Non-missing data
 yObs <- Y[which(Obs == 1)]
@@ -113,7 +115,7 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
                   paste(100*table(Obs)[1]/n,"%.", sep=""))))
 
 # Variance estimation
-ProfileCov(df_MNAR, n, 0.5, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau,
+ProfileCov(df_MNAR, n, 0.01, emEstimate$Beta, emEstimate$Sigma, runif(bn+q),
            bn, q, gHNodes, max_iter, tol) -> varEst
 
 #-----------------------
@@ -121,7 +123,7 @@ ProfileCov(df_MNAR, n, 0.5, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau,
 # mclapply not working under Windows (use mclapply)
 #-----------------------
 
-B <- 200
+B <- 2000
 
 df_MNAR_list <- mclapply(1:B, function(x)
 {
@@ -177,4 +179,9 @@ monteCarloResults <- lapply(df_MNAR_list, function(x)
 
 MCResults <- monteCarloInDataFrame(monteCarloResults)
 ThetaMat <- MCResults[,c("Beta0_EM", "Beta1_EM", "Beta2_EM", "Sigma_EM")]
+
+# Empirical covariance matrix
 cov(ThetaMat)
+
+# Covariance matrix using profile likelihood
+varEst
