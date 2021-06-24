@@ -13,11 +13,11 @@ source("mstep.R")
 #-----------------------
 
 # Hyper-parameters
-n <- 1000
+n <- 2500
 
-ratio <- 5
+ratio <- 4
 
-pr_non_missing <- 0.7 # does not mean proportion of non-missing rate, but can be used to control the missing rate
+pr_non_missing <- .9 # does not mean proportion of non-missing rate, but can be used to control the missing rate
 uni_radius_1 <- 2 # control how spread-out X1 is
 uni_radius_2 <- 2 # control how spread-out X2 is
 std <- uni_radius_1/ratio # standard deviation (sigma) of the linear data model
@@ -40,9 +40,11 @@ Z <- X[,1]
 U <- X[,2] # \pi(Y)
 
 # Missing model
+
+hyper <- log(U/2+1/2)-log(1-U/2)
 yy <- log(Y/(1-Y))
-YU <- cbind(yy, sin(2*pi*yy))
-coef2 <- c(1, 0.2)
+YU <- cbind((yy-U*uni_radius_1)^2, (yy+U*uni_radius_1)^2)
+coef2 <- c(0.5, -.5)
 Obs <- simuMiss(YU, coef2)
 
 # Check overlap between 0/1 and proportion of missing
@@ -52,6 +54,24 @@ colnames(dat) <- c("Y", "Obs", "X1", "X2")
 dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
   ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
 
+# Data summary
+print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
+            paste("the proportion of missing is",
+                  paste(100*table(Obs)[1]/n,"%.", sep=""))))
+
 # EM algorithm
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
-(emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif((bn+q)^2), bn, q, gHNodes, max_iter, tol))
+emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif((bn+q)^2), bn, q, gHNodes, max_iter, tol)
+emEstimate
+
+# Non-missing data
+yObs <- Y[which(Obs == 1)]
+xObs <- X[which(Obs == 1),]
+yLM <- log(yObs/(1-yObs))
+obsLM <- lm(yLM~xObs)
+
+(beta_non_missing <- obsLM$coefficients)
+(sigma_non_missing <- sigma(obsLM))
+
+# True
+coef1
