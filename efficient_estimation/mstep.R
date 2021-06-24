@@ -221,6 +221,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   datList <- AppendSplines(df_MNAR, bn, q)
   nu <- length(df_MNAR$U_indices)
   nz <- length(df_MNAR$Z_indices)
+  nsieve <- (bn+q)^((nu!=0)+(nz!=0))
   
   iter <- 1
   SUCCESS <- 0
@@ -232,7 +233,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
-    newList <- MStep_1Step(df1, df2, nu, nz, bn+q)
+    newList <- MStep_1Step(df1, df2, nu, nz, nsieve)
     
     beta_new <- newList$Beta
     sigma_new <- newList$Sigma
