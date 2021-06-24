@@ -13,13 +13,13 @@ simuY_LM <- function(X, coef, sd=1)
 simuY <- function(X, coef, sd)
 {
   y <- simuY_LM(X, coef, sd)
-  return(exp(y)/(1+exp(y)))
+  return(1/(1+exp(-y)))
 }
 
 simuMiss <- function(YU, coef)
 {
   coef <- matrix(coef, ncol = 1)
-  expLinear <- exp(YU%*%coef)
-  prob <- expLinear/(1+expLinear)
+  expLinear <- exp(YU %*% coef)
+  prob <- 1/(1+1/expLinear)
   return(ifelse(runif(nrow(YU))<prob, 1, 0))
 }
