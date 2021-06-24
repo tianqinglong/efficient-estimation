@@ -180,7 +180,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   Y1 <- log(matAllFull[,"Y"])-log(1-matAllFull[,"Y"])
   matAllFull <- cbind(matAllFull, Y1)
   
-  fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allU,allZ), collapse = "+")))
+  fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allZ, allU), collapse = "+")))
   matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)) & ! is.nan(matAllFull$Weight) ,]
   f1 <- lm(formula = fmla1, weights = Weight, data = matAllFullSub)
   betaNew <- f1$coefficients
@@ -221,7 +221,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   datList <- AppendSplines(df_MNAR, bn, q)
   nu <- length(df_MNAR$U_indices)
   nz <- length(df_MNAR$Z_indices)
-  nsieve <- (bn+q)^((nu!=0)+(nz!=0))
+  nsieve <- (bn+q)^(nu+1)
   
   iter <- 1
   SUCCESS <- 0
@@ -244,7 +244,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
     #   browser()
     # }
     
-    dis <- sum((beta_new-beta_old)^2)+sum((sigma_new-sigma_old)^2)
+    dis <- sum((beta_new-beta_old)^2)+(sigma_new-sigma_old)^2
     
     if (dis < tol)
     {
