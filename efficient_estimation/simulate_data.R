@@ -7,7 +7,7 @@
 simuY_LM <- function(X, coef, sd=1)
 {
   coef <- matrix(coef, ncol = 1)
-  return(X%*%coef+as.matrix(sd*rnorm(nrow(X))))
+  rnorm(nrow(X), X%*%coef, sd)
 }
 
 simuY <- function(X, coef, sd)
