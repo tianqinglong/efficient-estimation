@@ -66,7 +66,7 @@ PseudoObservation <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
     yuBs <- YUSplinePrep(ybs1, ubsMat)
     B_yu[i,] <- yuBs
     
-    exp_tauB_inv <- 1/(exp(sum(yuBs*tauOld))+1)
+    exp_tauB_inv <- 1-1/(exp(-sum(yuBs*tauOld))+1)
     realWeight[i] <- exp_tauB_inv*w[i]/sqrt(pi)
     
     de <- de+w[i]*exp_tauB_inv/sqrt(pi)
@@ -76,7 +76,7 @@ PseudoObservation <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
   # {
   #   browser()
   # }
-  Y <- exp(y)/(1+exp(y))
+  Y <- 1/(1+exp(-y))
   colnames(B_yu) <- paste("bs", 1:ncol(B_yu), sep = "")
   
   if (is.null(Z))
