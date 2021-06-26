@@ -15,19 +15,19 @@ source("mstep_additive.R")
 #-----------------------
 
 # Hyper-parameters
-n <- 20000
+n <- 8000
 
-ratio <- 3
+ratio <- 6
 
-pr_non_missing <- .9 # does not mean proportion of non-missing rate, but can be used to control the missing rate
+pr_non_missing <- .8 # does not mean proportion of non-missing rate, but can be used to control the missing rate
 uni_radius_1 <- 2 # control how spread-out X1 is
-uni_radius_2 <- 1.5 # control how spread-out X2 is
+uni_radius_2 <- -2 # control how spread-out X2 is
 std <- (abs(uni_radius_1)+abs(uni_radius_2))/ratio # standard deviation (sigma) of the linear data model
-bn <- 6 # interior knots
-q <- 4 # order of basis-spline
+bn <- 3 # interior knots
+q <- 3 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
 max_iter <- 200
-tol <- 1e-4
+tol <- 1e-7
 
 # Data model coefficients
 coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
@@ -46,7 +46,7 @@ U <- X[,2] # \pi(Y,U)
 hyper <- log(U/2+1/2)-log(1-U/2)
 yy <- log(Y/(1-Y))
 YU <- cbind(yy, hyper)
-coef2 <- c(2, 2)
+coef2 <- c(1.5, -1)
 Obs <- simuMiss(YU, coef2)
 
 # Check overlap between 0/1 and proportion of missing
