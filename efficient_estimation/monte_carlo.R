@@ -11,7 +11,6 @@ Rcpp::sourceCpp("bspline_recursive.cpp")
 source("add_splines.R")
 source("estep.R")
 source("mstep.R")
-source("parallel.R")
 source("variance.R")
 #-----------------------
 # Auxiliary functions
@@ -46,16 +45,16 @@ monteCarloInDataFrame <- function(monteCarloResults)
 #-----------------------
 
 # Hyper-parameters
-n <- 5000
+n <- 500
 
-ratio <- 2
+ratio <- 3
 
 pr_non_missing <- 0.8 # does not mean proportion of non-missing rate, but can be used to control the missing rate
-uni_radius_1 <- 2 # control how spread-out X1 is
-uni_radius_2 <- 2 # control how spread-out X2 is
-std <- uni_radius_1/ratio # standard deviation (sigma) of the linear data model
-bn <- 3 # interior knots
-q <- 3 # order of basis-spline
+uni_radius_1 <- 1 # control how spread-out X1 is
+uni_radius_2 <- 1 # control how spread-out X2 is
+std <- abs(uni_radius_1)/ratio # standard deviation (sigma) of the linear data model
+bn <- 2 # interior knots
+q <- 2 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
 max_iter <- 200
 tol <- 1e-4
@@ -76,7 +75,7 @@ U <- NULL # \pi(Y)
 # Missing model
 yy <- log(Y/(1-Y))
 YU <- cbind(yy, sin(2*pi*yy))
-coef2 <- c(2, 0.25)
+coef2 <- c(1, 0.1)
 Obs <- simuMiss(YU, coef2)
 
 
@@ -90,8 +89,6 @@ dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
 # EM algorithm
 df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
-emEstimate$Beta
-emEstimate$Sigma
 
 # Non-missing data
 yObs <- Y[which(Obs == 1)]
@@ -101,6 +98,10 @@ obsLM <- lm(yLM~xObs)
 
 (beta_non_missing <- obsLM$coefficients)
 (sigma_non_missing <- sigma(obsLM))
+
+# EM results
+emEstimate$Beta
+emEstimate$Sigma
 
 # Oracle
 oracleLM <- lm(yy~X)
@@ -123,7 +124,7 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 
 B <- 200
 
-df_MNAR_list <- mclapply(1:B, function(x)
+df_MNAR_list <- lapply(1:B, function(x)
 {
   X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
   Y <- simuY(cbind(1, X), coef1, std)
@@ -182,4 +183,4 @@ ThetaMat <- MCResults[,c("Beta0_EM", "Beta1_EM", "Beta2_EM", "Sigma_EM")]
 cov(ThetaMat)
 
 # Covariance matrix using profile likelihood
-(ProfileCov(df_MNAR, n, 0.009, emEstimate$Beta, emEstimate$Sigma, runif(bn+q), bn, q, gHNodes, max_iter, tol) -> varEst)
+(ProfileCov(df_MNAR, n, 0.01, emEstimate$Beta, emEstimate$Sigma, runif(bn+q), bn, q, gHNodes, max_iter, tol) -> varEst)
