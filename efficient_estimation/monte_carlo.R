@@ -63,8 +63,8 @@ std <- 1
 bn <- 2 # interior knots
 q <- 2 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
-max_iter <- 200
-tol <- 1e-7
+max_iter <- 500
+tol <- 1e-4
 
 # Data model coefficients
 # coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
