@@ -17,18 +17,24 @@ source("variance.R")
 #-----------------------
 monteCarloInDataFrame <- function(monteCarloResults)
 {
+  numBeta <- length(monteCarloResults[[1]]$Beta_EM)
+  
   BetaEM <- t(sapply(monteCarloResults, function(x) {x$Beta_EM}))
-  colnames(BetaEM) <- c("Beta0_EM", "Beta1_EM", "Beta2_EM")
+  colnames(BetaEM) <- paste("BetaEM_", 1:numBeta, sep = "")
+  
   BetaNM <- t(sapply(monteCarloResults, function(x) {x$Beta_NM}))
-  colnames(BetaNM) <- c("Beta0_NM", "Beta1_NM", "Beta2_NM")
+  colnames(BetaNM) <- paste("BetaNM_", 1:numBeta, sep = "")
+  
   BetaOR <- t(sapply(monteCarloResults, function(x) {x$Beta_OR}))
-  colnames(BetaOR) <- c("Beta0_OR", "Beta1_OR", "Beta2_OR")
+  colnames(BetaOR) <- paste("BetaOR_", 1:numBeta, sep = "")
+  
   BetaTotal <- cbind(BetaEM, BetaNM, BetaOR)
   
   SigmaEM <- sapply(monteCarloResults, function(x) {x$Sigma_EM})
   SigmaNM <- sapply(monteCarloResults, function(x) {x$Sigma_NM})
   SigmaOR <- sapply(monteCarloResults, function(x) {x$Sigma_OR})
   SigmaTotal <- cbind(SigmaEM, SigmaNM, SigmaOR)
+  
   colnames(SigmaTotal) <- c("Sigma_EM", "Sigma_NM", "Sigma_OR")
   
   Convergence <- sapply(monteCarloResults, function(x) {x$Convergence})
@@ -45,14 +51,15 @@ monteCarloInDataFrame <- function(monteCarloResults)
 #-----------------------
 
 # Hyper-parameters
-n <- 500
+n <- 300
 
 ratio <- 3
 
 pr_non_missing <- 0.8 # does not mean proportion of non-missing rate, but can be used to control the missing rate
 uni_radius_1 <- 1 # control how spread-out X1 is
 uni_radius_2 <- 1 # control how spread-out X2 is
-std <- abs(uni_radius_1)/ratio # standard deviation (sigma) of the linear data model
+# std <- abs(uni_radius_1)/ratio # standard deviation (sigma) of the linear data model
+std <- 1
 bn <- 2 # interior knots
 q <- 2 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
@@ -60,34 +67,38 @@ max_iter <- 200
 tol <- 1e-4
 
 # Data model coefficients
-coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
+# coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
+coef_intercept <- 1
 coef_x1 <- uni_radius_1
 coef_x2 <- uni_radius_2
-coef1 <- c(coef_intercept, coef_x1, coef_x2)
-
+# coef1 <- c(coef_intercept, coef_x1, coef_x2)
+coef1 <- c(coef_intercept, coef_x1)
 
 # Simulate complete data
-X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
+# X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
+X <- matrix(rnorm(n), ncol = 1)
 Y <- simuY(cbind(1, X), coef1, std)
 Z <- X
 U <- NULL # \pi(Y)
 
 # Missing model
 yy <- log(Y/(1-Y))
-YU <- cbind(yy, sin(2*pi*yy))
-coef2 <- c(1, 0.1)
+# YU <- cbind(yy, sin(2*pi*yy))
+YU <- cbind(1, yy)
+coef2 <- c(-1, 1)
 Obs <- simuMiss(YU, coef2)
-
 
 # Check overlap between 0/1 and proportion of missing
 dat <- cbind(Y, Obs, Z, U)
-colnames(dat) <- c("Y", "Obs", "X1", "X2")
+# colnames(dat) <- c("Y", "Obs", "X1", "X2")
+colnames(dat) <- c("Y", "Obs", "X1")
 
 dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
   ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
 
 # EM algorithm
-df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+# df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+df_MNAR <- list(data = dat, Z_indices = 3, U_indices = NULL)
 emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
 
 # Non-missing data
@@ -122,65 +133,70 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 # mclapply not working under Windows (use mclapply)
 #-----------------------
 
-B <- 200
-
-df_MNAR_list <- lapply(1:B, function(x)
-{
-  X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
-  Y <- simuY(cbind(1, X), coef1, std)
-  Z <- X
-  U <- NULL # \pi(Y)
-  
-  yy <- log(Y/(1-Y))
-  YU <- cbind(yy, sin(2*pi*yy))
-  coef2 <- c(1, 1)
-  Obs <- simuMiss(YU, coef2)
-  
-  dat <- cbind(Y, Obs, Z, U)
-  colnames(dat) <- c("Y", "Obs", "X1", "X2")
-  
-  df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
-  
-  return(df_MNAR)
-}
-)
-
-monteCarloResults <- lapply(df_MNAR_list, function(x)
-{
-  df_MNAR <- x
-  emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
-  
-  dat <- df_MNAR$data
-  Obs <- dat[,"Obs"]
-  Y <- dat[,"Y"]
-  X <- dat[,-c(1,2)]
-  
-  yObs <- Y[which(Obs == 1)]
-  xObs <- X[which(Obs == 1),]
-  
-  yLM <- log(yObs/(1-yObs))
-  obsLM <- lm(yLM~xObs)
-  
-  beta_non_missing <- obsLM$coefficients
-  sigma_non_missing <- sigma(obsLM)
-  
-  yy <- log(Y/(1-Y))
-  oracleLM <- lm(yy~X)
-  beta_oracle <- oracleLM$coefficients
-  sigma_oracle <- sigma(oracleLM)
-  
-  return(list(Beta_EM = emEstimate$Beta, Sigma_EM = emEstimate$Sigma, Convergence = emEstimate$Success,
-              Beta_NM = beta_non_missing, Sigma_NM = sigma_non_missing,
-              Beta_OR = beta_oracle, Sigma_OR = sigma_oracle,
-              Num_Miss = table(Obs)[1], Prop_Miss = table(Obs)[1]/length(Obs)))
-}
-)
-
-MCResults <- monteCarloInDataFrame(monteCarloResults)
-ThetaMat <- MCResults[,c("Beta0_EM", "Beta1_EM", "Beta2_EM", "Sigma_EM")]
+# B <- 300
+# 
+# df_MNAR_list <- lapply(1:B, function(x)
+# {
+#   X <- matrix(rnorm(n), ncol = 1)
+#   Y <- simuY(cbind(1, X), coef1, std)
+#   Z <- X
+#   U <- NULL # \pi(Y)
+# 
+#   # Missing model
+#   yy <- log(Y/(1-Y))
+#   # YU <- cbind(yy, sin(2*pi*yy))
+#   YU <- cbind(1, yy)
+#   coef2 <- c(-1, 1)
+#   Obs <- simuMiss(YU, coef2)
+# 
+#   # Check overlap between 0/1 and proportion of missing
+#   dat <- cbind(Y, Obs, Z, U)
+#   # colnames(dat) <- c("Y", "Obs", "X1", "X2")
+#   colnames(dat) <- c("Y", "Obs", "X1")
+# 
+#   df_MNAR <- list(data = dat, Z_indices = 3, U_indices = NULL)
+# 
+#   return(df_MNAR)
+# }
+# )
+# 
+# monteCarloResults <- lapply(df_MNAR_list, function(x)
+# {
+#   df_MNAR <- x
+#   emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
+# 
+#   dat <- df_MNAR$data
+#   Obs <- dat[,"Obs"]
+#   Y <- dat[,"Y"]
+#   X <- dat[,-c(1,2)]
+# 
+#   yObs <- Y[which(Obs == 1)]
+# # xObs <- X[which(Obs == 1),]
+#   xObs <- as.matrix(X)[which(Obs == 1),]
+# 
+#   yLM <- log(yObs/(1-yObs))
+#   obsLM <- lm(yLM~xObs)
+# 
+#   beta_non_missing <- obsLM$coefficients
+#   sigma_non_missing <- sigma(obsLM)
+# 
+#   yy <- log(Y/(1-Y))
+#   oracleLM <- lm(yy~X)
+#   beta_oracle <- oracleLM$coefficients
+#   sigma_oracle <- sigma(oracleLM)
+# 
+#   return(list(Beta_EM = emEstimate$Beta, Sigma_EM = emEstimate$Sigma, Convergence = emEstimate$Success,
+#               Beta_NM = beta_non_missing, Sigma_NM = sigma_non_missing,
+#               Beta_OR = beta_oracle, Sigma_OR = sigma_oracle,
+#               Num_Miss = table(Obs)[1], Prop_Miss = table(Obs)[1]/length(Obs)))
+# }
+# )
+# 
+# MCResults <- monteCarloInDataFrame(monteCarloResults)
+# ThetaMat <- MCResults[,c("BetaEM_1", "BetaEM_2", "Sigma_EM")]
 
 # Empirical covariance matrix
 cov(ThetaMat)
 
 # Covariance matrix using profile likelihood
-(ProfileCov(df_MNAR, n, 0.01, emEstimate$Beta, emEstimate$Sigma, runif(bn+q), bn, q, gHNodes, max_iter, tol) -> varEst)
+(ProfileCov(df_MNAR, sqrt(min(abs(vcov(obsLM)))), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4) -> varEst)
