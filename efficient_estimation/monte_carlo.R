@@ -64,7 +64,7 @@ bn <- 2 # interior knots
 q <- 2 # order of basis-spline
 gHNodes <- 8 # Gauss-Hermite nodes
 max_iter <- 200
-tol <- 1e-4
+tol <- 1e-7
 
 # Data model coefficients
 # coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
@@ -132,8 +132,8 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 # Monte Carlo Using the same setting as the single trial
 # mclapply not working under Windows (use mclapply)
 #-----------------------
-
-# B <- 300
+# 
+# B <- 30
 # 
 # df_MNAR_list <- lapply(1:B, function(x)
 # {
@@ -165,6 +165,19 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 #   df_MNAR <- x
 #   emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
 # 
+#   varEst <- ProfileCov(df_MNAR, sqrt(min(abs(vcov(obsLM)))),
+#                        emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau,
+#                        bn, q, gHNodes, bn+q, 1, max_iter, 1e-4)
+#   
+#   betaCIs <- matrix(ncol = 4)
+#   sd_b0 <- sqrt(varEst[1,1])
+#   sd_b1 <- sqrt(varEst[2,2])
+#   betaCIs[1] <- emEstimate$Beta[1]-1.96*sd_b0
+#   betaCIs[2] <- emEstimate$Beta[1]+1.96*sd_b0
+#   
+#   betaCIs[3] <- emEstimate$Beta[2]-1.96*sd_b1
+#   betaCIs[4] <- emEstimate$Beta[2]+1.96*sd_b1
+#   
 #   dat <- df_MNAR$data
 #   Obs <- dat[,"Obs"]
 #   Y <- dat[,"Y"]
@@ -188,15 +201,33 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
 #   return(list(Beta_EM = emEstimate$Beta, Sigma_EM = emEstimate$Sigma, Convergence = emEstimate$Success,
 #               Beta_NM = beta_non_missing, Sigma_NM = sigma_non_missing,
 #               Beta_OR = beta_oracle, Sigma_OR = sigma_oracle,
-#               Num_Miss = table(Obs)[1], Prop_Miss = table(Obs)[1]/length(Obs)))
+#               Num_Miss = table(Obs)[1], Prop_Miss = table(Obs)[1]/length(Obs),
+#               CI = betaCIs))
 # }
 # )
 # 
 # MCResults <- monteCarloInDataFrame(monteCarloResults)
 # ThetaMat <- MCResults[,c("BetaEM_1", "BetaEM_2", "Sigma_EM")]
+# 
+# CIMat <- sapply(monteCarloResults, function(x) {x$CI})
+# CIMat <- CIMat[,complete.cases(t(CIMat))]
+# Count0 <- 0
+# Count1 <- 0
+# for(i in 1:ncol(CIMat))
+# {
+#   if (CIMat[1,i] <= 1 & 1 <= CIMat[2,i])
+#   {
+#     Count0 <- Count0+1
+#   }
+#   if (CIMat[3,i] <= 1 & 1 <= CIMat[4,i])
+#   {
+#     Count1 <- Count1+1
+#   }
+# }
+# cp <- list(Count0/ncol(CIMat), Count1/ncol(CIMat))
 
 # Empirical covariance matrix
 cov(ThetaMat)
 
 # Covariance matrix using profile likelihood
-(ProfileCov(df_MNAR, sqrt(min(abs(vcov(obsLM)))), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4) -> varEst)
+(ProfileCov(df_MNAR, sqrt(min(diag(vcov(obsLM)))), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4) -> varEst)
