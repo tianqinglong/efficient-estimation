@@ -17,6 +17,7 @@ AppendSplines <- function(dat_list, bn, q)
   bs_y <- matrix(nrow = length(yObs), ncol = bn+q)
   
   delta <- quantile(yObs, probs = seq(0, 1, length.out = (bn+2))[2:(bn+1)])
+  # delta <- seq(0, 1, length.out = (bn+2))[2:(bn+1)]
   delta <- c(rep(0, q), delta, rep(1, q+2))
   
   dat_list$delta <- delta

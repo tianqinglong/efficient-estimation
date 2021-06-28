@@ -80,7 +80,7 @@ ProfileEM <- function(df_MNAR, beta_init, sigma_init, tau_init,
     opt <- ProfileEMOneStep(tau_old, df1, df2, nsieve, beta_fixed, sigma_fixed, n_covariate)
 
     tau_new <- opt$par
-    dis <- sum((tau_new-tau_old)^2)
+    dis <- max((tau_new-tau_old)^2)
     
     if (dis < tol)
     {

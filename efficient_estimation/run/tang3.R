@@ -64,7 +64,13 @@ while (total <= B) {
   total <- total+1
 }
 
-saveRDS(df_MNAR_list, file = "tang3.rds")
+# saveRDS(df_MNAR_list, file = "tang3.rds")
+
+#-----------------
+# Analysis
+#-----------------
+
+df_MNAR_list <- readRDS(file = "tang3.rds")
 
 count0 <- 0
 count1 <- 0
@@ -92,3 +98,11 @@ for (i in 1:length(df_MNAR_list))
 count0/length(df_MNAR_list)
 count1/length(df_MNAR_list)
 count2/length(df_MNAR_list)
+
+betaVal <- sapply(df_MNAR_list, function(x)
+{
+  x$EM$Beta
+})
+
+betaVal <- t(betaVal)
+colMeans(betaVal)

@@ -65,11 +65,21 @@ while (total <= B) {
   total <- total+1
 }
 
-saveRDS(df_MNAR_list, file = "tang2.rds")
+# saveRDS(df_MNAR_list, file = "tang2.rds")
+
+#-----------------
+# Analysis
+#-----------------
+
+df_MNAR_list <- readRDS(file = "tang2_d5_1.rds")
 
 count0 <- 0
 count1 <- 0
 count2 <- 0
+
+beta_0 <- 1
+beta_1 <- 1
+std <- 1
 
 for (i in 1:length(df_MNAR_list))
 {
@@ -90,6 +100,15 @@ for (i in 1:length(df_MNAR_list))
   count2 <- count2+( (std >= max(0,sigma0-1.96*sd_sigma0)) & (std <= sigma0+1.96*sd_sigma0) )
 }
 
-count0/B
-count1/B
-count2/B
+count0/length(df_MNAR_list)
+count1/length(df_MNAR_list)
+count2/length(df_MNAR_list)
+
+betaVal <- sapply(df_MNAR_list, function(x)
+{
+  x$EM$Beta
+})
+
+betaVal <- t(betaVal)
+colMeans(betaVal)
+

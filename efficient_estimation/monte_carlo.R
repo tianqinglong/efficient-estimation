@@ -63,7 +63,7 @@ uni_radius_2 <- 1 # control how spread-out X2 is
 std <- 1
 bn <- 2 # interior knots
 q <- 2 # order of basis-spline
-gHNodes <- 10 # Gauss-Hermite nodes
+gHNodes <- 9 # Gauss-Hermite nodes
 max_iter <- 500
 tol <- 1e-4
 
@@ -77,7 +77,7 @@ coef1 <- c(coef_intercept, coef_x1)
 
 # Simulate complete data
 # X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
-X <- matrix(rnorm(n), ncol = 1)
+X <- matrix(truncnorm::rtruncnorm(n, b = 0.7), ncol = 1)
 Y <- simuY(cbind(1, X), coef1, std)
 Z <- X
 U <- NULL # \pi(Y)
@@ -94,13 +94,16 @@ dat <- cbind(Y, Obs, Z, U)
 # colnames(dat) <- c("Y", "Obs", "X1", "X2")
 colnames(dat) <- c("Y", "Obs", "X1")
 
+#dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
+#  ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
+
 dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
-  ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
+  ggplot(aes(x = X))+geom_density(aes(fill = OBS), alpha = 0.5)
 
 # EM algorithm
 # df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = NULL)
-emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q), bn, q, gHNodes, max_iter, tol)
+emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q, min = -0.4, max = 0.4), bn, q, gHNodes, max_iter, tol)
 
 # Non-missing data
 yObs <- Y[which(Obs == 1)]
@@ -128,8 +131,9 @@ std
 print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
             paste("the proportion of missing is",
                   paste(100*table(Obs)[1]/n,"%.", sep=""))))
+
 # Covariance matrix using profile likelihood
-(varEst <- ProfileCov(df_MNAR, 1/sqrt(n), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, tol))
+(varEst <- ProfileCov(df_MNAR, 1/sqrt(n), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
 
 #-----------------------
 # Dump probalematic samples

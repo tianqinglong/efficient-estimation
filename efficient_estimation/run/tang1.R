@@ -1,6 +1,5 @@
 library(fastGHQuad)
 library(tidyverse)
-library(parallel)
 source("../simulate_data.R")
 Rcpp::sourceCpp("../bspline_recursive.cpp")
 source("../add_splines.R")
@@ -10,7 +9,7 @@ source("../variance.R")
 
 total <- 1
 cnt <- 1
-B <- 1000
+B <- 20
 n <- 300
 
 beta_0 <- 1
@@ -64,11 +63,21 @@ while (total <= B) {
   total <- total+1
 }
 
-saveRDS(df_MNAR_list, file = "tang1.rds")
+# saveRDS(df_MNAR_list, file = "tang1.rds")
+
+#-----------------
+# Analysis
+#-----------------
+
+df_MNAR_list <- readRDS("tang1.rds")
 
 count0 <- 0
 count1 <- 0
 count2 <- 0
+
+beta_0 <- 1
+beta_1 <- 1
+std <- 1
 
 for (i in 1:length(df_MNAR_list))
 {
@@ -92,3 +101,11 @@ for (i in 1:length(df_MNAR_list))
 count0/length(df_MNAR_list)
 count1/length(df_MNAR_list)
 count2/length(df_MNAR_list)
+
+betaVal <- sapply(df_MNAR_list, function(x)
+  {
+  x$EM$Beta
+})
+
+betaVal <- t(betaVal)
+colMeans(betaVal)
