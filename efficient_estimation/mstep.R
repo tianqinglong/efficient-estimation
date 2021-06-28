@@ -186,16 +186,6 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   betaNew <- f1$coefficients
   sigmaNew <- sqrt(sum(matAllFullSub$Weight*f1$residuals^2, na.rm = T)/sum(matAllFullSub$Weight, na.rm = T))
   
-  # if (length(matAllFullSub$Weight) != length(f1$residuals))
-  # {
-  #   browser()
-  # }
-  
-  # if(is.nan(sigmaNew))
-  # {
-  #   browser()
-  # }
-  
   # Tau Part
   Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
   matAllFull <- cbind(matAllFull, Y2)
@@ -244,7 +234,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
     #   browser()
     # }
     
-    dis <- sum((beta_new-beta_old)^2)+(sigma_new-sigma_old)^2+sum((tau_old-tau_new)^2)
+    dis <- sum((beta_new-beta_old)^2)+(sigma_new-sigma_old)^2#+sum((tau_old-tau_new)^2)
     
     if (dis < tol)
     {
