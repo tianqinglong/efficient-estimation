@@ -133,7 +133,7 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
                   paste(100*table(Obs)[1]/n,"%.", sep=""))))
 
 # Covariance matrix using profile likelihood
-(varEst <- ProfileCov(df_MNAR, 1/sqrt(n), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
+(varEst <- ProfileCov(df_MNAR, sqrt(vcov(obsLM)[2,2]), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
 
 #-----------------------
 # Dump probalematic samples

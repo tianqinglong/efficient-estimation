@@ -71,7 +71,7 @@ while (total <= B) {
 # Analysis
 #-----------------
 
-df_MNAR_list <- readRDS(file = "tang2_d5_1.rds")
+df_MNAR_list <- readRDS(file = "modified_tol/tang2.rds")
 
 count0 <- 0
 count1 <- 0
@@ -80,6 +80,9 @@ count2 <- 0
 beta_0 <- 1
 beta_1 <- 1
 std <- 1
+
+CI_Z1 <- matrix(ncol = 2, nrow = length(df_MNAR_list))
+complete_beta <- matrix(ncol = 2, nrow = length(df_MNAR_list))
 
 for (i in 1:length(df_MNAR_list))
 {
@@ -92,12 +95,24 @@ for (i in 1:length(df_MNAR_list))
   # beta1
   beta1 <- res$EM$Beta[2]
   sd_beta1 <- sqrt(res$Var[2])
-  count1 <- count1+( (beta_1 >= beta1-1.96*sd_beta1) & (beta_1 <= beta1+1.96*sd_beta1) )
+  count1 <- count1+( (beta_1 >= beta1-2*sd_beta1) & (beta_1 <= beta1+2*sd_beta1) )
+  
+  CI_Z1[i,] <- c(beta1-1.96*sd_beta1,
+                 beta1+1.96*sd_beta1)
   
   # sigma
   sigma0 <- res$EM$Sigma
   sd_sigma0 <- sqrt(res$Var[3])
   count2 <- count2+( (std >= max(0,sigma0-1.96*sd_sigma0)) & (std <= sigma0+1.96*sd_sigma0) )
+  
+  # Complete data
+  dat_list <- res$df
+  dat <- as.data.frame(dat_list$data)
+  
+  complete <- lm(log(Y/(1-Y))~X1,data = dat)
+  (beta_oracle <- complete$coefficients)
+  (sigma_oracle <- sigma(complete))
+  complete_beta[i,] <- beta_oracle
 }
 
 count0/length(df_MNAR_list)
@@ -111,4 +126,8 @@ betaVal <- sapply(df_MNAR_list, function(x)
 
 betaVal <- t(betaVal)
 colMeans(betaVal)
+colMeans(abs(betaVal-1))
+
+colMeans(complete_beta)
+colMeans(abs(complete_beta-1))
 

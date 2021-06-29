@@ -70,7 +70,7 @@ while (total <= B) {
 # Analysis
 #-----------------
 
-df_MNAR_list <- readRDS(file = "tang3.rds")
+df_MNAR_list <- readRDS(file = "modified_tol_large_n/tang3.rds")
 
 count0 <- 0
 count1 <- 0
