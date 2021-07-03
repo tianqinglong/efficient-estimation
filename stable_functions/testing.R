@@ -8,11 +8,11 @@ source("estep.R")
 source("mstep.R")
 source("loglikelihood.R")
 
-n <- 300
+n <- 500
 coef1 <- c(1,1)
 sd <- 1
 ghn <- 8
-bn <- 2
+bn <- 3
 q <- 2
 max_iter <- 300
 tol <- 1e-5
@@ -61,3 +61,21 @@ for(i in 1:length(hnVec))
                      ProfileCov(df_MNAR, hnVec[i], beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves, 1, max_iter, tol))
 }
 outList
+
+# Analysis of coverage
+rout <- readRDS("C:/Users/qltia/Desktop/rout.rds")
+rout[sapply(rout, is.character)] <- NULL
+
+sdVec <- t(sapply(rout, function(x) {sqrt(diag(x$Var))}))
+coefVec <- t(sapply(rout, function(x) {c(x$EM$Beta, x$EM$Sigma)}))
+lowerConf <- coefVec-1.96*sdVec
+upperConf <- coefVec+1.96*sdVec
+
+trueVal <- matrix(rep(c(1, 1, 1), times = length(rout)), byrow = T, ncol = 3)
+colMeans((trueVal < upperConf) & (trueVal > lowerConf))
+
+# Analysis of failures
+rout <- readRDS("C:/Users/qltia/Desktop/rout.rds")
+rout[sapply(rout, is.list)] <- NULL
+routf <- sapply(rout, function(x) {x})
+table(routf)
