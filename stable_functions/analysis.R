@@ -101,8 +101,8 @@ analysis <- function(rout, true_theta)
   rout_save[sapply(rout_save, function(x) {!is.character(x$Var)})] <- NULL
   Diagnosis1 <- table(sapply(rout_save, function(x) {x$Var}))
   
-  Diagnosis2 <- c(nclean, ntotal)
-  names(Diagnosis2) <- c("Successfull Trials", "Total Trials")
+  Diagnosis2 <- c(nclean, ntotal, success_rate)
+  names(Diagnosis2) <- c("Successfull Trials", "Total Trials", "Success Rate")
   
   return(list(emOut, bdOut, marOut, Diagnosis1, Diagnosis2))
 }
