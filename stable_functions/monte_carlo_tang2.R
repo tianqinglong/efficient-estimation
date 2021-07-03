@@ -143,4 +143,4 @@ out <- mclapply(1:B, function(x)
 mc.cores = 16
 )
 
-saveRDS(out, file = "rout1.rds")
+saveRDS(out, file = "rout_tang2.rds")
