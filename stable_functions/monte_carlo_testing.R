@@ -57,7 +57,7 @@ out <- mclapply(1:B, function(x)
   )
   if(stop_this_trial)
   {
-    return("Bad data!")
+    return(list(Data = df_MNAR, EM = "EM abnormal", Var = "EM abnormal!"))
   }
   
   # Profile likelihood
@@ -125,10 +125,10 @@ out <- mclapply(1:B, function(x)
     
     if(stop_this_trial)
     {
-      return("Error profiling!")
+      return(list(Data = df_MNAR, EM = emEstimate, Var = "Error profiling!"))
     }
   }
-  
+
   if (any(is.nan(covMat)) | any(is.na(covMat)))
   {
     return(list(Data = df_MNAR, EM = emEstimate, Var = "NA/NaN in covariance matrix!"))
@@ -137,7 +137,7 @@ out <- mclapply(1:B, function(x)
   {
     return(list(Data = df_MNAR, EM = emEstimate, Var = "Hessian is not PD!"))
   }
-  
+
   return(list(Data = df_MNAR, EM=emEstimate, Var = covMat))
 },
 mc.cores = 16
