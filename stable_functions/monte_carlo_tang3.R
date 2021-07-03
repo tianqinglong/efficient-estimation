@@ -14,8 +14,8 @@ coef1 <- c(1,1)
 sd <- 1
 ghn <- 8
 bn <- 2
-q <- 2
-max_iter <- 350
+q <- 3
+max_iter <- 500
 tol <- 1e-5
 
 out <- mclapply(1:B, function(x)
@@ -27,9 +27,9 @@ out <- mclapply(1:B, function(x)
   U <- NULL # \pi(Y)
   nsieves <- bn+q
   yy <- log(Y/(1-Y))
-  YU <- cbind(1, yy)
-  coef2 <- c(-1, 1)
-  Obs <- 1-simuMiss(YU, coef2, use_logit = F)
+  YU <- cbind(1, yy, yy^2)
+  coef2 <- c(-.4, -2, 1)
+  Obs <- simuMiss(YU, coef2, use_logit = F)
   dat <- cbind(Y, Obs, Z, U)
   colnames(dat) <- c("Y", "Obs", "X1")
   
@@ -142,4 +142,4 @@ out <- mclapply(1:B, function(x)
 mc.cores = 16
 )
 
-saveRDS(out, file = "/work/STAT/qltian/em/rout_tang1.rds")
+saveRDS(out, file = "/work/STAT/qltian/em/rout_tang3.rds")

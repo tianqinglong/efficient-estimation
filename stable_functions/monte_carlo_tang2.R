@@ -15,7 +15,7 @@ sd <- 1
 ghn <- 8
 bn <- 2
 q <- 2
-max_iter <- 300
+max_iter <- 350
 tol <- 1e-5
 
 out <- mclapply(1:B, function(x)
@@ -48,9 +48,6 @@ out <- mclapply(1:B, function(x)
     expr = {
       emEstimate <- main(df_MNAR, coef1+0.5, sd+0.2, runif(bn+q, min = -1, max = 1), bn, q, ghn, max_iter, tol)
     },
-    warning = function(w){
-      stop_this_trial <<- TRUE
-    },
     error = function(e){
       stop_this_trial <<- TRUE
     }
@@ -75,14 +72,16 @@ out <- mclapply(1:B, function(x)
     }
   )
   
-  if( change_hn == FALSE & (any(is.nan(covMat)) | any(is.na(covMat))) )
+  if( change_hn == FALSE)
   {
-    change_hn <- TRUE
-  }
-  
-  if( change_hn == FALSE & any(diag(covMat)<0) )
-  {
-    change_hn <- TRUE
+    if( any(is.nan(covMat)) | any(is.na(covMat)) )
+    {
+      change_hn <- TRUE
+    }
+    else if( any(diag(covMat)<0) )
+    {
+      change_hn <- TRUE
+    }
   }
   
   if( change_hn )
@@ -98,7 +97,7 @@ out <- mclapply(1:B, function(x)
       }
     )
     
-    if (exists("covMat"))
+    if (!continue_hn2)
     {
       if (any(is.nan(covMat)) | any(is.na(covMat)))
       {
@@ -128,7 +127,7 @@ out <- mclapply(1:B, function(x)
       return(list(Data = df_MNAR, EM = emEstimate, Var = "Error profiling!"))
     }
   }
-
+  
   if (any(is.nan(covMat)) | any(is.na(covMat)))
   {
     return(list(Data = df_MNAR, EM = emEstimate, Var = "NA/NaN in covariance matrix!"))
@@ -137,10 +136,10 @@ out <- mclapply(1:B, function(x)
   {
     return(list(Data = df_MNAR, EM = emEstimate, Var = "Hessian is not PD!"))
   }
-
+  
   return(list(Data = df_MNAR, EM=emEstimate, Var = covMat))
 },
 mc.cores = 16
 )
 
-saveRDS(out, file = "rout_tang2.rds")
+saveRDS(out, file = "/work/STAT/qltian/em/rout_tang2.rds")
