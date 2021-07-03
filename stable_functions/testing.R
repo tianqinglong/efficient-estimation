@@ -12,7 +12,7 @@ n <- 300
 coef1 <- c(1,1)
 sd <- 1
 ghn <- 8
-bn <- 3
+bn <- 2
 q <- 2
 max_iter <- 300
 tol <- 1e-5
@@ -49,11 +49,8 @@ beta_mle <- emEstimate$Beta
 sd_mle <- emEstimate$Sigma
 tau_mle <- emEstimate$Tau
 
-temp1 <- ProfileCov(df_MNAR, min(hn/2, .5/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves, 1, max_iter, tol)
-temp1
-
-temp2 <- ProfileCov1(df_MNAR, min(hn/2, .5/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves, 1, max_iter, tol)
-temp2
+temp <- ProfileCov(df_MNAR, min(hn, 1/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves, 1, max_iter, tol)
+temp
 
 # Tune the value of hn
 hnVec <- c(0.05*hn ,0.1*hn, 0.5*hn, hn, 1/sqrt(n), 0.025, 2*hn, 5*hn)
