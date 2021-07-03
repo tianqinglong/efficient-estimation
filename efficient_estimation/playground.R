@@ -1,10 +1,10 @@
-library(fastGHQuad)
-library(tidyverse)
-source("simulate_data.R")
-Rcpp::sourceCpp("bspline_recursive.cpp")
-source("add_splines.R")
-source("estep.R")
-source("mstep.R")
+# library(fastGHQuad)
+# library(tidyverse)
+# source("simulate_data.R")
+# Rcpp::sourceCpp("bspline_recursive.cpp")
+# source("add_splines.R")
+# source("estep.R")
+# source("mstep.R")
 
 # # Test data generating functions
 # 
@@ -79,74 +79,74 @@ source("mstep.R")
 # MStep(df1, df2, nu, nz, nsieve)
 
 ## Generate data
-n <- 2000
-X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
-Z <- X
-U <- NULL
-
-## Data model
-coef1 <- c(1, -2, 2)
-std <- 1
-Y <- simuY(cbind(1, X), coef1, std) # (0, 1)
-yy <- log(Y/(1-Y)) # (-inf, inf)
-
-## Missing model
-YU <- cbind(yy, sin(2*pi*yy))
-coef2 <- c(1, 1)
-Obs <- simuMiss(YU, coef2) # 1: observed; 0: missing
-
-table(Obs)
-
-yObs <- Y[which(Obs == 1)]
-xObs <- X[which(Obs == 1),]
-
-# Only use non-missing data
-yLM <- log(yObs/(1-yObs))
-
-obsLM <- lm(yLM~xObs)
-beta_init <- obsLM$coefficients
-sigma_init <- sigma(obsLM)
-
-# Oracle
-oracleLM <- lm(yy~X)
-beta_oracle <- oracleLM$coefficients
-sigma_oracle <- sigma(oracleLM)
-
-dat_df <- as.data.frame(dat)
-dat_df %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
-  ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha=0.5)
-
-# EM
-dat <- cbind(Y, Obs, Z, U)
-colnames(dat) <- c("Y", "Obs", "X1", "X2")
-df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
-
-bn <- 3
-q <- 3
-
-EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
-                    bn, q, gaussHermiteNodes = 8, tol = 1e-4)
-
-# Proportion of missing
-table(Obs)
-
-# EM algorithm
-EM_estimate[1:2]
-
-# Only non-missing data
-beta_init
-sigma_init
-
-# Oracle (use all data)
-beta_oracle
-sigma_oracle
-
-# True
-coef1
-std
-
-ProfileEM(df_MNAR, EM_estimate$Beta, EM_estimate$Sigma, rep(0, bn+q),
-          bn, q, gaussHermiteNodes = 8, tol = 1e-4)
+# n <- 2000
+# X <- matrix(runif(2*n, min = -1, max = 1), ncol = 2)
+# Z <- X
+# U <- NULL
+# 
+# ## Data model
+# coef1 <- c(1, -2, 2)
+# std <- 1
+# Y <- simuY(cbind(1, X), coef1, std) # (0, 1)
+# yy <- log(Y/(1-Y)) # (-inf, inf)
+# 
+# ## Missing model
+# YU <- cbind(yy, sin(2*pi*yy))
+# coef2 <- c(1, 1)
+# Obs <- simuMiss(YU, coef2) # 1: observed; 0: missing
+# 
+# table(Obs)
+# 
+# yObs <- Y[which(Obs == 1)]
+# xObs <- X[which(Obs == 1),]
+# 
+# # Only use non-missing data
+# yLM <- log(yObs/(1-yObs))
+# 
+# obsLM <- lm(yLM~xObs)
+# beta_init <- obsLM$coefficients
+# sigma_init <- sigma(obsLM)
+# 
+# # Oracle
+# oracleLM <- lm(yy~X)
+# beta_oracle <- oracleLM$coefficients
+# sigma_oracle <- sigma(oracleLM)
+# 
+# dat_df <- as.data.frame(dat)
+# dat_df %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
+#   ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha=0.5)
+# 
+# # EM
+# dat <- cbind(Y, Obs, Z, U)
+# colnames(dat) <- c("Y", "Obs", "X1", "X2")
+# df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
+# 
+# bn <- 3
+# q <- 3
+# 
+# EM_estimate <- main(df_MNAR, beta_init*3, sigma_init*3, rep(0, bn+q),
+#                     bn, q, gaussHermiteNodes = 8, tol = 1e-4)
+# 
+# # Proportion of missing
+# table(Obs)
+# 
+# # EM algorithm
+# EM_estimate[1:2]
+# 
+# # Only non-missing data
+# beta_init
+# sigma_init
+# 
+# # Oracle (use all data)
+# beta_oracle
+# sigma_oracle
+# 
+# # True
+# coef1
+# std
+# 
+# ProfileEM(df_MNAR, EM_estimate$Beta, EM_estimate$Sigma, rep(0, bn+q),
+#           bn, q, gaussHermiteNodes = 8, tol = 1e-4)
 
 #-----------------------
 # Simulate N samples and compute the empirical covariance matrix
@@ -168,7 +168,7 @@ source("variance.R")
 #-----------------------
 
 # Hyper-parameters
-n <- 600
+n <- 300
 
 ratio <- 3
 
@@ -181,7 +181,7 @@ bn <- 2 # interior knots
 q <- 2 # order of basis-spline
 gHNodes <- 9 # Gauss-Hermite nodes
 max_iter <- 500
-tol <- 1e-4
+tol <- 1e-7
 
 # Data model coefficients
 # coef_intercept <- log(pr_non_missing/(1-pr_non_missing))
@@ -219,7 +219,11 @@ dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
 # EM algorithm
 # df_MNAR <- list(data = dat, Z_indices = c(3, 4), U_indices = NULL)
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = NULL)
-emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q, min = -0.4, max = 0.4), bn, q, gHNodes, max_iter, tol)
+# emEstimate1 <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q, min = -1, max = 1), bn, q, gHNodes, max_iter, 1e-8)
+emEstimate <- main(df_MNAR, 2*coef1, 2*std, runif(bn+q, min = -1, max = 1), bn, q, gHNodes, max_iter, tol)
+
+ProfileEM(df_MNAR, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1)
+ProfileEM(df_MNAR, emEstimate$Beta+c(0, 0.01), emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1)
 
 # Non-missing data
 yObs <- Y[which(Obs == 1)]
@@ -249,39 +253,39 @@ print(paste("There are", table(Obs)[1],"out of", n,"missing observations,",
                   paste(100*table(Obs)[1]/n,"%.", sep=""))))
 
 # Covariance matrix using profile likelihood
-(varEst <- ProfileCov(df_MNAR, 6/sqrt(n), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
-(varEst <- ProfileCov1(df_MNAR, sqrt(vcov(obsLM)[2,2]), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
-
-ProfileEM(df_MNAR, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1)
-ProfileEM1(df_MNAR, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1)
+(varEst <- ProfileCov(df_MNAR, sqrt(vcov(obsLM)[2,2]), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, tol*100))
+# (varEst <- ProfileCov1(df_MNAR, sqrt(vcov(obsLM)[2,2]), emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1, max_iter, 1e-4))
+# 
+# 
+# ProfileEM1(df_MNAR, emEstimate$Beta, emEstimate$Sigma, emEstimate$Tau, bn, q, gHNodes, bn+q, 1)
 
 #
-
-nn <- 100
-
-X <- rnorm(nn)
-W <- abs(rnorm(nn))
-Y <- as.numeric(runif(nn) >= 1/(1+exp(-3+4*X)))
-
-df <- data.frame(Y, X, W)
-
-glm(cbind(Y, 1-Y)~X, family = binomial(link = "logit"), weights = W, data = df)
-glm(Y~X, family = binomial(link = "logit"), weights = W, data = df)
-
-fn <- function(par, df)
-{
-  nobs <- nrow(df)
-  loglik <- 0
-  
-  Y <- df$Y
-  X <- df$X
-  W <- df$W
-  
-  for (i in 1:nobs)
-  {
-    loglik <- loglik+ifelse(Y[i], log(1/(exp(-sum(par*c(1, X[i])))+1)), log(1-1/(exp(-sum(par*c(1, X[i])))+1)))*W[i]
-  }
-  return(-loglik)
-}
-
-optim(c(2,2), fn, df=df)
+# 
+# nn <- 100
+# 
+# X <- rnorm(nn)
+# W <- abs(rnorm(nn))
+# Y <- as.numeric(runif(nn) >= 1/(1+exp(-3+4*X)))
+# 
+# df <- data.frame(Y, X, W)
+# 
+# glm(cbind(Y, 1-Y)~X, family = binomial(link = "logit"), weights = W, data = df)
+# # glm(Y~X, family = binomial(link = "logit"), weights = W, data = df)
+# 
+# fn <- function(par, df)
+# {
+#   nobs <- nrow(df)
+#   loglik <- 0
+#   
+#   Y <- df$Y
+#   X <- df$X
+#   W <- df$W
+#   
+#   for (i in 1:nobs)
+#   {
+#     loglik <- loglik+ifelse(Y[i], log(1/(exp(-sum(par*c(1, X[i])))+1)), log(1-1/(exp(-sum(par*c(1, X[i])))+1)))*W[i]
+#   }
+#   return(-loglik)
+# }
+# 
+# optim(c(2,2), fn, df=df)

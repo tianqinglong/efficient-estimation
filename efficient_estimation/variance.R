@@ -23,7 +23,8 @@ LogLikFixedBetaSigma <- function(tauVec, matObsFull, matMissFull, nsieve, fixedB
   Y1 <- log(matAllFull[,"Y"])-log(1-matAllFull[,"Y"])
   matAllFull <- cbind(matAllFull, Y2, Y1)
   
-  matAllComp <- matAllFull[complete.cases(matAllFull),]
+  comcase <- complete.cases(matAllFull)
+  matAllComp <- matAllFull[comcase,]
   
   # Linear part
   dat_model <- as.matrix(cbind(1, matAllComp[, 3:(2+n_covariate)]))
@@ -36,7 +37,7 @@ LogLikFixedBetaSigma <- function(tauVec, matObsFull, matMissFull, nsieve, fixedB
   for_non_missing <- logit_pi-log(1+exp(logit_pi))
   for_missing <- -log(1+exp(logit_pi))
   
-  output <- sum(obsVec*for_non_missing+(1-obsVec)*for_missing)+logLikLinear
+  output <- sum(obsVec[comcase]*for_non_missing+(1-obsVec[comcase])*for_missing)+logLikLinear
   
   return(-output)
 }
@@ -47,6 +48,22 @@ ProfileEMOneStep <- function(tau_init, matObsFull, matMissFull, nsieve, fixedBet
                matMissFull = matMissFull, nsieve = nsieve,
                fixedBeta = fixedBeta, fixedSigma = fixedSigma, n_covariate = n_covariate)
   return(opt)
+}
+
+ProfileEMOneStep_GLM <- function(tau_init, matObsFull, matMissFull, nsieve, fixedBeta, fixedSigma, n_covariate)
+{
+  n_obs <- nrow(matObsFull)
+  n_miss <- nrow(matMissFull)
+  obsVec <- c(rep(1, n_obs), rep(0, n_miss))
+  
+  Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
+  
+  matAllFull <- as.data.frame(rbind(matObsFull, matMissFull))
+  Y1 <- log(matAllFull[,"Y"])-log(1-matAllFull[,"Y"])
+  matAllFull <- cbind(matAllFull, Y2, Y1)
+  
+  matAllComp <- matAllFull[complete.cases(matAllFull),]
+  
 }
 
 ProfileEM <- function(df_MNAR, beta_init, sigma_init, tau_init,
@@ -117,7 +134,7 @@ ProfileEM <- function(df_MNAR, beta_init, sigma_init, tau_init,
   # 
   # LogLik1 <- sum( dnorm(matAllFullSub$Y1, mu_vec, sigma_fixed, log = T) * matAllFullSub$Weight )
   
-  return(-opt$value)
+  return(list(loglik = -opt$value, tau = tau_old))
   
 #  return(list(LogLik = as.numeric(newList$LogLik+LogLik1)))
 }
@@ -125,6 +142,7 @@ ProfileEM <- function(df_MNAR, beta_init, sigma_init, tau_init,
 #-----------------------
 # Compute the log-likelihood
 #-----------------------
+
 
 
 #-----------------------
@@ -136,17 +154,16 @@ ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_init,
 {
   numPara <- length(beta_mle)+1
   covMat <- matrix(nrow = numPara, ncol = numPara)
-  # hn <- h_coef/sqrt(n)
   diagMat <- diag(numPara)
   theta_mle <- c(beta_mle, sigma_mle)
-  pf4 <- ProfileEM(df_MNAR, beta_mle, sigma_mle, tau_init,
-                   bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol, evaluate_only = T)
+  pf4 <- computeLogLikelihood(df_MNAR, beta_mle, sigma_mle, tau_init, gHNodes, n_sieve, bn, q)
   pf1Vec <- numeric(numPara)
   for (i in 1:numPara)
   {
     theta_1 <- theta_mle+(diagMat[i,])*hn
-    pf1Vec[i] <- ProfileEM(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init,
-                           bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
+    emTemp <- main(df_MNAR = df_MNAR, beta_init = theta_1[1:(numPara-1)], sigma_init = theta_1[numPara], tau_init = tau_init, bn = bn, q = q, gaussHermiteNodes = gHNodes, max_iter = max_iter, tol = tol, T)
+    pf1Vec[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
+                                      gHNodes, n_sieve, bn, q)
   }
   
   pf2Mat <- numeric(choose(numPara,2))
@@ -158,16 +175,18 @@ ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_init,
     k <- chosen[1]
     l <- chosen[2]
     theta_1 <- theta_mle+(diagMat[k,])*hn+(diagMat[l,])*hn
-    pf2Mat[i] <- ProfileEM(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init,
-                           bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
+    emTemp <- main(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init, bn, q, gHNodes, max_iter, tol, T)
+    pf2Mat[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
+                                      gHNodes, n_sieve, bn, q)
   }
   
   pf2Diag <- numeric(numPara)
   for(i in 1:numPara)
   {
     theta_1 <- theta_mle+(diagMat[i,])*2*hn
-    pf2Diag[i] <- ProfileEM(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init,
-                            bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
+    emTemp <- main(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init, bn, q, gHNodes, max_iter, tol, T)
+    pf2Diag[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
+                                       gHNodes, n_sieve, bn, q)
   }
   
   for (i in 1:length(pf2Mat))

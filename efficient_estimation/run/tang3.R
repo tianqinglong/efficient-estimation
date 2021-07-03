@@ -70,7 +70,7 @@ while (total <= B) {
 # Analysis
 #-----------------
 
-df_MNAR_list <- readRDS(file = "modified_tol_large_n/tang3.rds")
+df_MNAR_list <- readRDS(file = "modified_tol_large_n_large_bn/tang3.rds")
 
 count0 <- 0
 count1 <- 0
@@ -93,6 +93,15 @@ for (i in 1:length(df_MNAR_list))
   sigma0 <- res$EM$Sigma
   sd_sigma0 <- sqrt(res$Var[3])
   count2 <- count2+( (std >= sigma0-1.96*sd_sigma0) & (std <= sigma0+1.96*sd_sigma0) )
+  
+  # Complete data
+  dat_list <- res$df
+  dat <- as.data.frame(dat_list$data)
+  
+  complete <- lm(log(Y/(1-Y))~X1,data = dat)
+  (beta_oracle <- complete$coefficients)
+  (sigma_oracle <- sigma(complete))
+  complete_beta[i,] <- beta_oracle
 }
 
 count0/length(df_MNAR_list)
@@ -106,3 +115,7 @@ betaVal <- sapply(df_MNAR_list, function(x)
 
 betaVal <- t(betaVal)
 colMeans(betaVal)
+colMeans(abs(betaVal-1))
+
+colMeans(complete_beta)
+colMeans(abs(complete_beta-1))

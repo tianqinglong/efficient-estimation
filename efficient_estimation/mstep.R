@@ -155,7 +155,7 @@ MakeFullDataSetMissing <- function(dataList, rules, betaOld, sigmaOld, tauOld)
 # Use glm to do the estimation
 #-----------------------
 
-MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
+MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigma = FALSE, beta_old, sigma_old)
 {
   # Beta and Sigma Part
   if (nu > 0)
@@ -180,11 +180,19 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
   Y1 <- log(matAllFull[,"Y"])-log(1-matAllFull[,"Y"])
   matAllFull <- cbind(matAllFull, Y1)
   
-  fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allZ, allU), collapse = "+")))
-  matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)) & ! is.nan(matAllFull$Weight) ,]
-  f1 <- lm(formula = fmla1, weights = Weight, data = matAllFullSub)
-  betaNew <- f1$coefficients
-  sigmaNew <- sqrt(sum(matAllFullSub$Weight*f1$residuals^2, na.rm = T)/sum(matAllFullSub$Weight, na.rm = T))
+  if(fixed_beta_sigma)
+  {
+    betaNew <- beta_old
+    sigmaNew <- sigma_old
+  }
+  else
+  {
+    fmla1 <- as.formula(paste("Y1 ~ ", paste(c(allZ, allU), collapse = "+")))
+    matAllFullSub <- matAllFull[!(matAllFull$Y1 %in% c(NA, NaN, Inf, -Inf)) & ! is.nan(matAllFull$Weight) ,]
+    f1 <- lm(formula = fmla1, weights = Weight, data = matAllFullSub)
+    betaNew <- f1$coefficients
+    sigmaNew <- sqrt(sum(matAllFullSub$Weight*f1$residuals^2, na.rm = T)/sum(matAllFullSub$Weight, na.rm = T))
+  }
   
   # Tau Part
   Y2 <- c(rep(1, nrow(matObsFull)), rep(0, nrow(matMissFull)))
@@ -205,7 +213,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve)
 # df_MNAR: is the list without splines. Only with Y, Obs, X and info about U and Z
 main <- function(df_MNAR, beta_init, sigma_init, tau_init,
                  bn = 3, q = 3, gaussHermiteNodes = 10,
-                 max_iter = 200, tol = 1e-4)
+                 max_iter = 200, tol = 1e-4, fixed_beta_sigma=F)
 {
   rules <- gaussHermiteData(gaussHermiteNodes)
   datList <- AppendSplines(df_MNAR, bn, q)
@@ -223,18 +231,13 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
-    newList <- MStep_1Step(df1, df2, nu, nz, nsieve)
+    newList <- MStep_1Step(df1, df2, nu, nz, nsieve, fixed_beta_sigma, beta_old, sigma_old)
     
     beta_new <- newList$Beta
     sigma_new <- newList$Sigma
     tau_new <- newList$Tau
     
-    # if(sum(is.na(beta_new)) > 0 | is.na(sigma_new) | sum(is.na(tau_new)) > 0)
-    # {
-    #   browser()
-    # }
-    
-    dis <- sum((beta_new-beta_old)^2)+(sigma_new-sigma_old)^2+max((tau_old-tau_new)^2)
+    dis <- sum((beta_new-beta_old)^2)+(sigma_new-sigma_old)^2+sum((tau_old-tau_new)^2)
     
     if (dis < tol)
     {
