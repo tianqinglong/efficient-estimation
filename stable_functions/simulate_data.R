@@ -16,10 +16,16 @@ simuY <- function(X, coef, sd)
   return(1/(1+exp(-y)))
 }
 
-simuMiss <- function(YU, coef)
+simuMiss <- function(YU, coef, use_logit = T)
 {
   coef <- matrix(coef, ncol = 1)
-  expLinear <- exp(YU %*% coef)
-  prob <- 1/(1+1/expLinear)
+  if(use_logit)
+  {
+    prob <- 1/(1+exp(-YU %*% coef))
+  }
+  else
+  {
+    prob <- pnorm(YU %*% coef)
+  }
   return(ifelse(runif(nrow(YU))<prob, 1, 0))
 }
