@@ -68,68 +68,7 @@ computeLogLikelihood <- function(df_MNAR, beta, sd, tau, ghnodes, nsieves, bn, q
   return(logliksum1+logliksum2)
 }
 
-
 ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
-                       bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
-{
-  numPara <- length(beta_mle)+1
-  covMat <- matrix(nrow = numPara, ncol = numPara)
-  diagMat <- diag(numPara)
-  theta_mle <- c(beta_mle, sigma_mle)
-  pf4 <- computeLogLikelihood(df_MNAR, beta_mle, sigma_mle, tau_mle, gHNodes, n_sieve, bn, q)
-  pf1Vec <- numeric(numPara)
-  tau_init <- tau_mle
-  for (i in 1:numPara)
-  {
-    theta_1 <- theta_mle+(diagMat[i,])*hn
-    emTemp <- main(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init, bn, q, gHNodes, max_iter, tol, T)
-    pf1Vec[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
-                                      gHNodes, n_sieve, bn, q)
-  }
-  
-  pf2Mat <- numeric(choose(numPara,2))
-  combn_mat <- combn(1:numPara, 2)
-  
-  for (i in 1:length(pf2Mat))
-  {
-    chosen <- combn_mat[,i]
-    k <- chosen[1]
-    l <- chosen[2]
-    theta_1 <- theta_mle+(diagMat[k,])*hn+(diagMat[l,])*hn
-    emTemp <- main(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init, bn, q, gHNodes, max_iter, tol, T)
-    pf2Mat[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
-                                      gHNodes, n_sieve, bn, q)
-  }
-  
-  pf2Diag <- numeric(numPara)
-  for(i in 1:numPara)
-  {
-    theta_1 <- theta_mle-(diagMat[i,])*hn
-    emTemp <- main(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], tau_init, bn, q, gHNodes, max_iter, tol, T)
-    pf2Diag[i] <- computeLogLikelihood(df_MNAR, theta_1[1:(numPara-1)], theta_1[numPara], emTemp$Tau,
-                                       gHNodes, n_sieve, bn, q)
-  }
-  
-  for (i in 1:length(pf2Mat))
-  {
-    chosen <- combn_mat[,i]
-    k <- chosen[1]
-    l <- chosen[2]
-    
-    covMat[k, l] <- (pf2Mat[i]-pf1Vec[k]-pf1Vec[l]+pf4)
-    covMat[l, k] <- covMat[k, l]
-  }
-  
-  for (i in 1:numPara)
-  {
-    covMat[i,i] <- (pf2Diag[i]+pf1Vec[i]-2*pf4)
-  }
-  
-  covMat <- covMat/hn^2
-  return(solve(-covMat))
-}
-
-ProfileCov1 <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
                         bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
 {
   numPara <- length(beta_mle)+1
