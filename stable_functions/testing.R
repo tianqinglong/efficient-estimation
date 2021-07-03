@@ -68,10 +68,14 @@ sd <- 1
 # Analysis of coverage
 
 ## Tang (2003)-1
+rout1 <- readRDS("no_git/rout_tang1.rds")
+analysis(rout1, c(coef1, sd))
+
+## Tang (2003)-2
 rout2 <- readRDS("no_git/rout_tang2.rds")
 analysis(rout2, c(coef1, sd))
 
-## Tang (2003)-2
+## Tang (2003)-3
 rout3 <- readRDS("no_git/rout_tang3.rds")
 analysis(rout3, c(coef1, sd))
 
