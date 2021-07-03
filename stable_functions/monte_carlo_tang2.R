@@ -29,7 +29,7 @@ out <- mclapply(1:B, function(x)
   yy <- log(Y/(1-Y))
   YU <- cbind(1, yy)
   coef2 <- c(-1, 1)
-  Obs <- simuMiss(YU, coef2)
+  Obs <- 1-simuMiss(YU, coef2, use_logit = F)
   dat <- cbind(Y, Obs, Z, U)
   colnames(dat) <- c("Y", "Obs", "X1")
   
