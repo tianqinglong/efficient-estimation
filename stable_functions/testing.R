@@ -1,6 +1,5 @@
 library(fastGHQuad)
 library(tidyverse)
-
 source("simulate_data.R")
 Rcpp::sourceCpp("bspline_recursive.cpp")
 source("add_splines.R")
@@ -62,10 +61,17 @@ for(i in 1:length(hnVec))
 }
 outList
 
+####################################
+source("analysis.R")
+coef1 <- c(1,1)
+sd <- 1
 # Analysis of coverage
+
+## Tang (2003)-1
 rout2 <- readRDS("no_git/rout_tang2.rds")
 analysis(rout2, c(coef1, sd))
 
+## Tang (2003)-2
 rout3 <- readRDS("no_git/rout_tang3.rds")
 analysis(rout3, c(coef1, sd))
 
