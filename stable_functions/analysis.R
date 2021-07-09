@@ -99,7 +99,14 @@ analysis <- function(rout, true_theta)
   
   ## Diagnosis
   rout_save[sapply(rout_save, function(x) {!is.character(x$Var)})] <- NULL
-  Diagnosis1 <- table(sapply(rout_save, function(x) {x$Var}))
+  if(length(rout_save) == 0)
+  {
+    Diagnosis1 <- "No Failure."
+  }
+  else
+  {
+    Diagnosis1 <- table(sapply(rout_save, function(x) {x$Var}))
+  }
   
   Diagnosis2 <- c(nclean, ntotal, success_rate)
   names(Diagnosis2) <- c("Successfull Trials", "Total Trials", "Success Rate")

@@ -6,13 +6,15 @@ source("add_splines.R")
 source("estep.R")
 source("mstep.R")
 source("loglikelihood.R")
+source("analysis.R")
+####################################
 
-n <- 300
+n <- 1000
 coef1 <- c(1,1)
 sd <- 1
 ghn <- 8
 bn <- 2
-q <- 3
+q <- 2
 max_iter <- 500
 tol <- 1e-5
 
@@ -25,8 +27,9 @@ nsieves <- bn+q
 
 yy <- log(Y/(1-Y))
 YU <- cbind(1, yy, yy^2)
-coef2 <- c(-.4, -2, 1)
-Obs <- simuMiss(YU, coef2, use_logit = F)
+coef2 <- c(1, -1, .5)
+Obs <- simuMiss(YU, coef2, use_logit = T)
+table(Obs)
 
 dat <- cbind(Y, Obs, Z, U)
 colnames(dat) <- c("Y", "Obs", "X1")
@@ -40,7 +43,11 @@ lmMAR <- lm(yLM~xObs)
 hn <- min(sqrt(diag(vcov(lmMAR))))
 
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = NULL)
-emEstimate <- main(df_MNAR, coef1+0.5, sd+0.5, runif(bn+q, min = -1, max = 1), bn, q, ghn, max_iter, tol)
+(emEstimate <- main(df_MNAR, coef1+0.5, sd+0.5, runif(bn+q, min = -1, max = 1), bn, q, ghn, max_iter, tol))
+
+# MAR
+dat_mar <- dat %>% as.data.frame %>% filter(Obs == 1)
+lm(Y~X1, data = dat_mar)
 
 # Compute covariance matrix
 beta_mle <- emEstimate$Beta
@@ -62,7 +69,6 @@ for(i in 1:length(hnVec))
 outList
 
 ####################################
-source("analysis.R")
 coef1 <- c(1,1)
 sd <- 1
 # Analysis of coverage
@@ -71,11 +77,70 @@ sd <- 1
 rout1 <- readRDS("no_git/rout_tang1.rds")
 analysis(rout1, c(coef1, sd))
 
+## Tang (2003)-1:n=900
+rout1 <- readRDS("no_git/rout_tang1_n900.rds")
+analysis(rout1, c(coef1, sd))
+
 ## Tang (2003)-2
 rout2 <- readRDS("no_git/rout_tang2.rds")
+analysis(rout2, c(coef1, sd))
+
+## Tang (2003)-2:n=900
+n <- 900
+rout2 <- readRDS("no_git/rout_tang2_n900.rds")
 analysis(rout2, c(coef1, sd))
 
 ## Tang (2003)-3
 rout3 <- readRDS("no_git/rout_tang3.rds")
 analysis(rout3, c(coef1, sd))
 
+## My setting 1
+rout <- readRDS("no_git/rout_tian1.rds")
+analysis(rout, c(coef1, sd))
+
+####################################
+
+n <- 500
+coef1 <- c(1, 1, 1)
+sd <- 1
+ghn <- 8
+bn <- 2
+q <- 2
+max_iter <- 500
+tol <- 1e-5
+
+X1 <- matrix(truncnorm::rtruncnorm(n), ncol = 1)
+X2 <- matrix(rnorm(n, mean = 1-0.5*X1, sd = 1), ncol = 1)
+X <- cbind(X1, X2)
+Y <- simuY(cbind(1, X), coef1, sd)
+Z <- X1
+U <- X2
+nsieves <- (bn+q)^2
+
+yy <- log(Y/(1-Y))
+YU <- cbind(1, yy, yy^2, U^2)
+coef2 <- c(.5, -1, 1, -1)
+Obs <- simuMiss(YU, coef2, use_logit = T)
+table(Obs)
+
+dat <- cbind(Y, Obs, Z, U)
+colnames(dat) <- c("Y", "Obs", "X1", "X2")
+dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
+  ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
+
+yObs <- Y[which(Obs == 1)]
+xObs <- X[which(Obs == 1),]
+yLM <- log(yObs/(1-yObs))
+(lmMAR <- lm(yLM~xObs))
+hn <- min(sqrt(diag(vcov(lmMAR))))
+
+df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
+(emEstimate <- main(df_MNAR, coef1+0.5, sd+0.5, runif(nsieves, min = -1, max = 1), bn, q, ghn, max_iter, tol))
+# Compute covariance matrix
+beta_mle <- emEstimate$Beta
+sd_mle <- emEstimate$Sigma
+tau_mle <- emEstimate$Tau
+
+temp <- ProfileCov(df_MNAR, min(hn, 1/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves, 2, max_iter, tol)
+temp
+emEstimate
