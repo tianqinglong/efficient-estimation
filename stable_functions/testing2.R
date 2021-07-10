@@ -10,33 +10,33 @@ source("analysis.R")
 ####################################
 
 n <- 1000
-coef1 <- c(1, 1, 1, 1)
+coef1 <- c(1, 0.5, 0.5)
 sd <- 1
 ghn <- 8
-bn <- 2
+bn <- 5
 q <- 2
 max_iter <- 500
-tol <- 1e-5
+tol <- 1e-4
 
-X1 <- matrix(truncnorm::rtruncnorm(n, b = .5), ncol = 1)
-X2 <- matrix(truncnorm::rtruncnorm(2*n, a = -1, b = 1), ncol = 2)
+X1 <- NULL
+X2 <- matrix(truncnorm::rtruncnorm(2*n), ncol = 2)
 X <- cbind(X1, X2)
 Y <- simuY(cbind(1, X), coef1, sd)
-Z <- X1
+Z <- NULL
 U <- X2
 
 n_covarites <- ncol(X)
 yy <- log(Y/(1-Y))
 YU <- cbind(1, yy, U)
-coef2 <- c(-.5, .75, .75, .75)
-Obs <- simuMiss(YU, coef2, use_logit = T)
+coef2 <- c(1.5, 1, 1, 1)
+Obs <- simuMiss(YU, coef2, use_logit = F)
 table(Obs)
 
 dat <- cbind(Y, Obs, Z, U)
-colnames(dat) <- c("Y", "Obs", "X1", "X2", "X3")
+colnames(dat) <- c("Y", "Obs", paste("X", 1:(ncol(dat)-2), sep = ""))
 dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>% 
   ggplot(aes(x = yy))+geom_density(aes(fill = OBS), alpha = 0.5)
-df_MNAR <- list(data = dat, Z_indices = 3, U_indices = c(4,5))
+df_MNAR <- list(data = dat, Z_indices = NULL, U_indices = c(3, 4))
 
 yObs <- Y[which(Obs == 1)]
 xObs <- X[which(Obs == 1),]
@@ -50,8 +50,8 @@ hn <- min(sqrt(diag(vcov(lmMAR))))
 
 # Additive model
 nsieves_add <- (bn+q-1)*(ncol(U)+1)+1
-emEstimate <- main_additive(df_MNAR, coef1+0.5, sd+0.5, runif(nsieves_add, min = -1, max = 1), bn, q, ghn, max_iter, tol)
-emEstimate$Beta
+emEstimate <- main_additive(df_MNAR, coef1+0.5, sd+0.5, runif(nsieves_add, min = -2, max = 2), bn, q, ghn, max_iter, tol)
+emEstimate
 lmMAR
 (lmBD <- lm(yy~X))
 
@@ -61,6 +61,6 @@ sd_mle <- emEstimate$Sigma
 tau_mle <- emEstimate$Tau
 
 temp <- ProfileCov_additive(df_MNAR, min(hn, 1/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves_add, n_covarites, max_iter, tol)
-temp
-emEstimate
-lmMAR
+cbind(beta_mle-1.96*sqrt(diag(temp))[1:length(beta_mle)],
+      beta_mle+1.96*sqrt(diag(temp))[1:length(beta_mle)])
+confint(lmMAR)
