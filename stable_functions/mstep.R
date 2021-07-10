@@ -81,7 +81,7 @@ MakeFullDataSetObs_additive <- function(dataList)
   nu <- length(uIndices)
   bs_u_list <- paste("bs_u", 1:nu, sep = "")
   
-  bsMatObsDat <- matrix(nrow = nObs, ncol = (bn+q)^(1+nu))
+  bsMatObsDat <- matrix(nrow = nObs, ncol = 1+(bn+q-1)*(1+nu))
   
   for (i in 1:nObs)
   {
@@ -98,9 +98,9 @@ MakeFullDataSetObs_additive <- function(dataList)
     {
       ubsMat <- NULL
     }
-    bsMatObsDat[i,] <- c(dataList[["bs_y"]][i,], c(ubsMat))
+    bsMatObsDat[i,] <- c(dataList[["bs_y"]][i,], c(ubsMat[-1,]))
   }
-  colnames(bsMatObsDat) <- paste("bs", 1:((bn+q)*(1+nu)), sep = "")
+  colnames(bsMatObsDat) <- paste("bs", 1:(1+(bn+q-1)*(1+nu)), sep = "")
   
   zIndices <- dataList$Z_indices
   if(length(zIndices) > 0)
@@ -236,7 +236,7 @@ MakeFullDataSetMissing_additive <- function(dataList, rules, betaOld, sigmaOld, 
   x <- rules$x
   w <- rules$w
   
-  bsMatMissDat <- matrix(ncol = (bn+q)*(nu+1)+nu+length(zIndices)+2,
+  bsMatMissDat <- matrix(ncol = 1+(bn+q-1)*(1+nu)+nu+length(zIndices)+2,
                          nrow = nMiss*length(x))
   for (i in 1:nMiss)
   {
@@ -296,7 +296,7 @@ MakeFullDataSetMissing_additive <- function(dataList, rules, betaOld, sigmaOld, 
     uNames <- paste("U",1:length(uIndices), sep = "")
   }
   
-  colnames(bsMatMissDat) <- c("Y", "Weight", zNames, uNames, paste("bs", 1:(bn+q)*(nu+1), sep = ""))
+  colnames(bsMatMissDat) <- c("Y", "Weight", zNames, uNames, paste("bs", 1:(1+(bn+q-1)*(1+nu)), sep = ""))
   return(bsMatMissDat)
 }
 
@@ -425,7 +425,7 @@ main_additive <- function(df_MNAR, beta_init, sigma_init, tau_init,
   datList <- AppendSplines(df_MNAR, bn, q)
   nu <- length(df_MNAR$U_indices)
   nz <- length(df_MNAR$Z_indices)
-  nsieve <- (bn+q)*(nu+1)
+  nsieve <- (bn+q-1)*(nu+1)+1
   
   iter <- 1
   SUCCESS <- 0
@@ -474,4 +474,3 @@ main_additive <- function(df_MNAR, beta_init, sigma_init, tau_init,
   newList[["Success"]] <- SUCCESS
   return(newList)
 }
-

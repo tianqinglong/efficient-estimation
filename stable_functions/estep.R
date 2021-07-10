@@ -106,11 +106,11 @@ PseudoObservation_additive <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
   YSplinePrep(y, delta, bn, q) -> yBSMat
   de <- 0
   realWeight <- numeric(nrow(yBSMat))
-  B_yu <- matrix(nrow = length(y), ncol = (bn+q)*(ifelse(is.null(ubsMat), 0, ncol(ubsMat))+1))
+  B_yu <- matrix(nrow = length(y), ncol = 1+(bn+q-1)*(ifelse(is.null(ubsMat), 0, ncol(ubsMat))+1))
   for (i in 1:nrow(yBSMat))
   {
     ybs1 <- yBSMat[i,]
-    yuBs <- c(ybs1, c(ubsMat))
+    yuBs <- c(ybs1, c(ubsMat[-1,]))
     B_yu[i,] <- yuBs
     
     exp_tauB_inv <- 1-1/(exp(-sum(yuBs*tauOld))+1)
