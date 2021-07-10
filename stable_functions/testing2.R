@@ -14,7 +14,7 @@ coef1 <- c(1, 0.5, 0.5)
 sd <- 1
 ghn <- 8
 bn <- 5
-q <- 2
+q <- 3
 max_iter <- 500
 tol <- 1e-4
 
@@ -28,8 +28,8 @@ U <- X2
 n_covarites <- ncol(X)
 yy <- log(Y/(1-Y))
 YU <- cbind(1, yy, U)
-coef2 <- c(1.5, 1, 1, 1)
-Obs <- simuMiss(YU, coef2, use_logit = F)
+coef2 <- c(1, 1, 1, 1)
+Obs <- simuMiss(YU, coef2, use_logit =T)
 table(Obs)
 
 dat <- cbind(Y, Obs, Z, U)
