@@ -349,7 +349,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigm
   
   # Tau Part
   fmla2 <- as.formula(paste("Y2 ~ 0+", paste(paste("bs", 1:nsieve, sep = ""), collapse = "+")))
-  f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "logit"), data = matAllFull)
+  f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "probit"), data = matAllFull)
   tauNew <- f2$coefficients
   
   return(list(Beta = betaNew, Sigma = sigmaNew, Tau = tauNew))
