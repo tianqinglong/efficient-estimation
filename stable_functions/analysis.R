@@ -40,25 +40,25 @@ analysis <- function(rout, true_theta)
   
   lapply(rout, function(x){
     dat <- as.data.frame(x$Data$data)
-    fmla <- as.formula(paste("log(Y/(1-Y)) ~ ", paste("X", 1:num_covariate, sep = ""), sep = ""))
+    fmla <- formula(paste("log(Y/(1-Y)) ~ ", paste("X", 1:num_covariate, sep = "", collapse = "+"), sep = ""))
     # Complete
     compLM <- lm(fmla, data = dat)
     
     compCoef <- c(compLM$coefficients, sigma(compLM))
-    names(compCoef) <- c("Intercept", "X1", "Sigma")
+    names(compCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     compSE <- c(sqrt(diag(vcov(compLM))), NA)
-    names(compSE) <- c("Intercept", "X1", "Sigma")
+    names(compSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     # Missing at random
     datMiss <- dat[dat$Obs == 1,]
     marLM <- lm(fmla, data = datMiss)
     
     marCoef <- c(marLM$coefficients, sigma(marLM))
-    names(marCoef) <- c("Intercept", "X1", "Sigma")
+    names(marCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     marSE <- c(sqrt(diag(vcov(marLM))), NA)
-    names(marSE) <- c("Intercept", "X1", "Sigma")
+    names(marSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     return(list(
       BD_coef = compCoef,

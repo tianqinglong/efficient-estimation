@@ -21,16 +21,16 @@ computeLogLikelihood <- function(df_MNAR, beta, sd, tau, ghnodes, nsieves, bn, q
   # Summing up log-likelihood
   if(nz == 0)
   {
-    ZCol <- numeric(0)
+    ZCol <- NULL
   }
   else
   {
-    ZCol <- paste("Z", 1:nu, sep = "")
+    ZCol <- paste("Z", 1:nz, sep = "")
   }
   
   if(nu == 0)
   {
-    UCol <- numeric(0)
+    UCol <- NULL
   }
   else
   {
@@ -41,7 +41,7 @@ computeLogLikelihood <- function(df_MNAR, beta, sd, tau, ghnodes, nsieves, bn, q
   
   rr <- datYUSpline[, "Y2"]
   yy <- datYUSpline[, "Y1"]
-  xx <- datYUSpline[, covariateCol]
+  xx <- datYUSpline %>% select(all_of(covariateCol))
   bb <- datYUSpline[, paste("bs", 1:nsieves, sep = "")]
   mu <- as.matrix(cbind(1,xx)) %*% as.matrix(beta, ncol=1)
   ww <- datYUSpline[,"Weight"]
