@@ -10,7 +10,7 @@ source("analysis.R")
 ####################################
 
 n <- 1000
-coef1 <- c(1, 1, 1)
+coef1 <- c(1, -1, 1)
 sd <- 1
 
 X1 <- NULL
@@ -23,7 +23,7 @@ U <- X2
 n_covarites <- ncol(X)
 yy <- log(Y/(1-Y))
 YU <- cbind(1, yy, U[,1], U[,2])
-coef2 <- c(1, 1, -1, 1)
+coef2 <- c(1, 2, -1, 1)
 Obs <- simuMiss(YU, coef2, use_logit =T)
 table(Obs)
 
@@ -44,7 +44,7 @@ hn <- min(sqrt(diag(vcov(lmMAR))))
 # (emEstimate0 <- main(df_MNAR, coef1+0.5, sd+0.5, runif(nsieves, min = -1, max = 1), bn, q, ghn, max_iter, tol))
 
 ghn <- 8
-bn <- 2
+bn <- 3
 q <- 2
 max_iter <- 500
 tol <- 1e-4
@@ -76,3 +76,5 @@ sd <- 1
 rout <- readRDS("no_git/rout_tian3_new.rds")
 analysis(rout, c(coef1, sd))
 
+rout <- readRDS("no_git/rout_tian3_new_improved.rds")
+analysis(rout, c(coef1, sd))

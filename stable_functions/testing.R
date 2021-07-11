@@ -95,7 +95,7 @@ rout3 <- readRDS("no_git/rout_tang3.rds")
 analysis(rout3, c(coef1, sd))
 
 ## My setting 1
-### q = bn = 2;
+### q = 2; bn = 3;
 rout <- readRDS("no_git/rout_tian1.rds")
 analysis(rout, c(coef1, sd))
 
@@ -103,4 +103,6 @@ analysis(rout, c(coef1, sd))
 rout <- readRDS("no_git/rout_tian1_q3bn3.rds")
 analysis(rout, c(coef1, sd))
 
-
+### q =2, bn = 3 -> 2;
+rout <- readRDS("no_git/rout_tian1_new.rds")
+analysis(rout, c(coef1, sd))
