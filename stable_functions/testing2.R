@@ -44,7 +44,7 @@ hn <- min(sqrt(diag(vcov(lmMAR))))
 # (emEstimate0 <- main(df_MNAR, coef1+0.5, sd+0.5, runif(nsieves, min = -1, max = 1), bn, q, ghn, max_iter, tol))
 
 ghn <- 8
-bn <- 1
+bn <- 2
 q <- 2
 max_iter <- 500
 tol <- 1e-4
@@ -67,3 +67,12 @@ cbind(beta_mle-2*sqrt(diag(temp))[1:length(beta_mle)],
       beta_mle+2*sqrt(diag(temp))[1:length(beta_mle)])
 confint(lmMAR)
 confint(lmBD)
+
+####################################
+coef1 <- c(1, 1, 1)
+sd <- 1
+
+## My setting 3
+rout <- readRDS("no_git/rout_tian3_new.rds")
+analysis(rout, c(coef1, sd))
+
