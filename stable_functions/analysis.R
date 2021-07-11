@@ -13,8 +13,8 @@ analysis <- function(rout, true_theta)
   # Coverage probability
   sdVec <- t(sapply(rout, function(x) {sqrt(diag(x$Var))}))
   coefVec <- t(sapply(rout, function(x) {c(x$EM$Beta, x$EM$Sigma)}))
-  lowerConf <- coefVec-1.96*sdVec
-  upperConf <- coefVec+1.96*sdVec
+  lowerConf <- coefVec-2*sdVec
+  upperConf <- coefVec+2*sdVec
   
   trueVal <- matrix(rep(true_theta, times = length(rout)), byrow = T, ncol = length(true_theta))
   cpVec <- colMeans((trueVal <= upperConf) & (trueVal >= lowerConf))
