@@ -37,18 +37,7 @@ computeLogLikelihood <- function(df_MNAR, beta, sd, tau, ghnodes, nsieves, bn, q
     UCol <- paste("U", 1:nu, sep = "")
   }
   
-  if (is.na(ZCol))
-  {
-    covariateCol <- UCol
-  }
-  else if (is.na(UCol))
-  {
-    covariateCol <- ZCol
-  }
-  else
-  {
-    covariateCol <- c(ZCol, UCol)
-  }
+  covariateCol <- c(ZCol, UCol)
   
   rr <- datYUSpline[, "Y2"]
   yy <- datYUSpline[, "Y1"]
@@ -121,23 +110,12 @@ computeLogLikelihood_additive <- function(df_MNAR, beta, sd, tau, ghnodes, nsiev
   {
     UCol <- paste("U", 1:nu, sep = "")
   }
-
-  if (any(is.na(ZCol)))
-  {
-    covariateCol <- UCol
-  }
-  else if (any(is.na(UCol)))
-  {
-    covariateCol <- ZCol
-  }
-  else
-  {
-    covariateCol <- c(ZCol, UCol)
-  }
+  
+  covariateCol <- c(ZCol, UCol)
   
   rr <- datYUSpline[, "Y2"]
   yy <- datYUSpline[, "Y1"]
-  xx <- datYUSpline %>% select(covariateCol)
+  xx <- datYUSpline %>% select(all_of(covariateCol))
   bb <- datYUSpline[, paste("bs", 1:nsieves, sep = "")]
   mu <- as.matrix(cbind(1,xx)) %*% as.matrix(beta, ncol=1)
   ww <- datYUSpline[,"Weight"]
@@ -236,19 +214,17 @@ ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
   
   diffs <- plusplus-minusplus-plusminus+minusminus
   
-  for(i in 1:ncol(combn_mat))
-  {
-    chosen <- combn_mat[,i]
-    k <- chosen[1]
-    l <- chosen[2]
-    
-    val <- diffs[i]
-    covMat[k,l] <- val
-    covMat[l,k] <- val
-  }
+  tryCatch(
+    expr = {
+      cov_mat <- solve(-covMat)
+    },
+    error = function(e)
+    {
+      cov_mat <- solve(-covMat+diag(hn, nrow = numPara))
+    }
+  )
   
-  covMat <- covMat/hn^2
-  return(solve(-covMat))
+  return(cov_mat)
 }
 
 ProfileCov_additive <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
@@ -331,5 +307,16 @@ ProfileCov_additive <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
   }
   
   covMat <- covMat/hn^2
-  return(solve(-covMat))
+  
+  tryCatch(
+    expr = {
+      cov_mat <- solve(-covMat)
+    },
+    error = function(e)
+    {
+      cov_mat <- solve(-covMat+diag(hn, nrow = numPara))
+    }
+  )
+  
+  return(cov_mat)
 }

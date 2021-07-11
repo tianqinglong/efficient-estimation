@@ -14,7 +14,7 @@ YSplinePrep <- function(y, delta, bn, q)
 # y: nodes from the Gauss-Hermite rules, without inv-logit transformation, with normal transformation
 # xVec: contains intercept
 {
-  y_inv_logit <- exp(y)/(exp(y)+1)
+  y_inv_logit <- 1/(exp(-y)+1)
   
   ybs <- matrix(nrow = length(y_inv_logit), ncol = bn+q)
   for (i in 1:length(y_inv_logit))
@@ -144,4 +144,3 @@ PseudoObservation_additive <- function(y, w, Z, U, ubsMat, delta, bn, q, tauOld)
   
   return(cbind(Y, Weight, ZMat, UMat, B_yu))
 }
-
