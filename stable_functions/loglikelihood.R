@@ -214,6 +214,18 @@ ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
   
   diffs <- plusplus-minusplus-plusminus+minusminus
   
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    
+    val <- diffs[i]
+    covMat[k,l] <- val
+    covMat[l,k] <- val
+  }
+  
+  cov_mat <- cov_mat/hn^2
   tryCatch(
     expr = {
       cov_mat <- solve(-covMat)
