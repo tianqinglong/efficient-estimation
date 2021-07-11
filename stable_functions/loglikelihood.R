@@ -224,19 +224,12 @@ ProfileCov <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
     covMat[k,l] <- val
     covMat[l,k] <- val
   }
-  
-  cov_mat <- cov_mat/hn^2
-  tryCatch(
-    expr = {
-      cov_mat <- solve(-covMat)
-    },
-    error = function(e)
-    {
-      cov_mat <- solve(-covMat+diag(hn, nrow = numPara))
-    }
-  )
+
+  covMat <- covMat/hn^2
+  cov_mat <- solve(-covMat)
   
   return(cov_mat)
+  
 }
 
 ProfileCov_additive <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
@@ -319,16 +312,7 @@ ProfileCov_additive <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
   }
   
   covMat <- covMat/hn^2
-  
-  tryCatch(
-    expr = {
-      cov_mat <- solve(-covMat)
-    },
-    error = function(e)
-    {
-      cov_mat <- solve(-covMat+diag(hn, nrow = numPara))
-    }
-  )
+  cov_mat <- solve(-covMat)
   
   return(cov_mat)
 }
