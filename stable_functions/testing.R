@@ -69,40 +69,42 @@ for(i in 1:length(hnVec))
 outList
 
 ####################################
-coef1 <- c(1,1)
-sd <- 1
-# Analysis of coverage
-
-## Tang (2003)-1
-rout1 <- readRDS("no_git/rout_tang1.rds")
-analysis(rout1, c(coef1, sd))
-
-## Tang (2003)-1:n=900
-rout1 <- readRDS("no_git/rout_tang1_n900.rds")
-analysis(rout1, c(coef1, sd))
-
-## Tang (2003)-2
-rout2 <- readRDS("no_git/rout_tang2.rds")
-analysis(rout2, c(coef1, sd))
-
-## Tang (2003)-2:n=900
-n <- 900
-rout2 <- readRDS("no_git/rout_tang2_n900.rds")
-analysis(rout2, c(coef1, sd))
-
-## Tang (2003)-3
-rout3 <- readRDS("no_git/rout_tang3.rds")
-analysis(rout3, c(coef1, sd))
-
-## My setting 1
-### q = 2; bn = 3;
-rout <- readRDS("no_git/rout_tian1.rds")
-analysis(rout, c(coef1, sd))
-
-### q = bn = 3;
-rout <- readRDS("no_git/rout_tian1_q3bn3.rds")
-analysis(rout, c(coef1, sd))
+# coef1 <- c(1,1)
+# sd <- 1
+# # Analysis of coverage
+# 
+# ## Tang (2003)-1
+# rout1 <- readRDS("no_git/rout_tang1.rds")
+# analysis(rout1, c(coef1, sd))
+# 
+# ## Tang (2003)-1:n=900
+# rout1 <- readRDS("no_git/rout_tang1_n900.rds")
+# analysis(rout1, c(coef1, sd))
+# 
+# ## Tang (2003)-2
+# rout2 <- readRDS("no_git/rout_tang2.rds")
+# analysis(rout2, c(coef1, sd))
+# 
+# ## Tang (2003)-2:n=900
+# n <- 900
+# rout2 <- readRDS("no_git/rout_tang2_n900.rds")
+# analysis(rout2, c(coef1, sd))
+# 
+# ## Tang (2003)-3
+# rout3 <- readRDS("no_git/rout_tang3.rds")
+# analysis(rout3, c(coef1, sd))
+# 
+# ## My setting 1
+# ### q = 2; bn = 3;
+# rout <- readRDS("no_git/rout_tian1.rds")
+# analysis(rout, c(coef1, sd))
+# 
+# ### q = bn = 3;
+# rout <- readRDS("no_git/rout_tian1_q3bn3.rds")
+# analysis(rout, c(coef1, sd))
 
 ### q =2, bn = 3 -> 2;
+coef1 <- c(1,1)
+sd <- 1
 rout <- readRDS("no_git/rout_tian1_new.rds")
 analysis(rout, c(coef1, sd))
