@@ -44,27 +44,41 @@ analysis <- function(rout, true_theta)
     # Complete
     compLM <- lm(fmla, data = dat)
     
+    sigma_lower_comp <- sqrt(sum(compLM$residuals^2)/qchisq(0.975, df = compLM$df.residual))
+    sigma_upper_comp <- sqrt(sum(compLM$residuals^2)/qchisq(0.025, df = compLM$df.residual))
+    
+    sigma_se_comp <- (sigma_upper_comp-sigma_lower_comp)/2/qnorm(0.975)
+    
     compCoef <- c(compLM$coefficients, sigma(compLM))
     names(compCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
-    compSE <- c(sqrt(diag(vcov(compLM))), NA)
+    compSE <- c(sqrt(diag(vcov(compLM))), sigma_se_comp)
     names(compSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     # Missing at random
     datMiss <- dat[dat$Obs == 1,]
     marLM <- lm(fmla, data = datMiss)
     
+    sigma_lower_mar <- sqrt(sum(marLM$residuals^2)/qchisq(0.975, df = marLM$df.residual))
+    sigma_upper_mar <- sqrt(sum(marLM$residuals^2)/qchisq(0.025, df = marLM$df.residual))
+    
+    sigma_se_mar <- (sigma_upper_mar-sigma_lower_mar)/2/qnorm(0.975)
+    
     marCoef <- c(marLM$coefficients, sigma(marLM))
     names(marCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
-    marSE <- c(sqrt(diag(vcov(marLM))), NA)
+    marSE <- c(sqrt(diag(vcov(marLM))), sigma_se_mar)
     names(marSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     return(list(
       BD_coef = compCoef,
       BD_se = compSE,
+      BD_sigma_lower = sigma_lower_comp,
+      BD_sigma_upper = sigma_upper_comp,
       MAR_coef = marCoef,
-      MAR_se = marSE
+      MAR_se = marSE,
+      MAR_sigma_lower = sigma_lower_mar,
+      MAR_sigma_upper = sigma_upper_mar
     ))
   }
   ) -> mar_comp
@@ -81,6 +95,13 @@ analysis <- function(rout, true_theta)
   BD_SE <- colMeans(BD_se_mat)
   BD_SD <- apply(BD_coef_mat, MARGIN = 2, sd)
   
+  BD_sigma_cp <- t(sapply(mar_comp, function(x)
+    {
+    (x$BD_coef[length(x$BD_coef)] >= x$BD_sigma_lower) & (x$BD_coef[length(x$BD_coef)] <= x$BD_sigma_upper)
+    }
+    )
+  )
+  BD_CP[length(BD_CP)] <- mean(BD_sigma_cp)
   bdOut <- rbind(BD_CP, BD_Bias, BD_SE, BD_SD)
   
   # MAR
@@ -95,6 +116,13 @@ analysis <- function(rout, true_theta)
   MAR_SE <- colMeans(MAR_se_mat)
   MAR_SD <- apply(MAR_coef_mat, MARGIN = 2, sd)
   
+  MAR_sigma_cp <- t(sapply(mar_comp, function(x)
+    {
+    (x$MAR_coef[length(x$MAR_coef)] >= x$MAR_sigma_lower) & (x$MAR_coef[length(x$MAR_coef)] <= x$BD_sigma_upper)
+    }
+    )
+  )
+  MAR_CP[length(MAR_CP)] <- mean(MAR_sigma_cp)
   marOut <- rbind(MAR_CP, MAR_Bias, MAR_SE, MAR_SD)
   
   ## Diagnosis
