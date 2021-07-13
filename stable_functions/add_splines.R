@@ -11,6 +11,7 @@ AppendSplines <- function(dat_list, bn, q)
   dat <- dat_list$data
   dat[order(dat[,"Obs"]),] -> dat
   dat_list$data <- dat
+  n <- nrow(dat)
   
   # B-splines for Y
   yObs <- dat[dat[,"Obs"] == 1, "Y"]
@@ -45,7 +46,19 @@ AppendSplines <- function(dat_list, bn, q)
   for (i in 1:dim_U)
   {
     nam <- paste("bs_u", i, sep = "")
-    temp <- splines::bs(U[,i], df = bn+q, degree = q-1, Boundary.knots = range(U[,i]), intercept = TRUE)
+    if(q > 1)
+    {
+      temp <- splines::bs(U[,i], df = bn+q, degree = q-1, Boundary.knots = range(U[,i]), intercept = TRUE)
+    }
+    else if(q == 1)
+    {
+      temp <- matrix(NA, nrow = n, ncol = bn+q)
+      cut_U <- cut(U[,i], breaks = quantile(U[,i], probs = seq(0, 1, 1/(bn+q))), include.lowest = T)
+      for (j in  1:(bn+q))
+      {
+        temp[, j] <- as.numeric(cut_U == names(table(cut_U))[j])
+      }
+    }
     colnames(temp) <- paste("bs", 1:(bn+q), sep="")
     assign(nam, temp)
   }
