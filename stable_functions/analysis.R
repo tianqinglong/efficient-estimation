@@ -1,3 +1,8 @@
+#-----------------------
+# Function to do the analysis of the output
+# Author: Qinglong Tian
+# Date: July 10, 2021
+#-----------------------
 analysis <- function(rout, true_theta)
 {
   ntotal <- length(rout)

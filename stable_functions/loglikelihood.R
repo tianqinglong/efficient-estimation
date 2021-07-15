@@ -1,3 +1,9 @@
+#-----------------------
+# Function to compute the incomplete log-likelihood;
+# Functions to compute the covariance matrix
+# Author: Qinglong
+# Date: July 10, 2021
+#-----------------------
 computeLogLikelihood <- function(df_MNAR, beta, sd, tau, ghnodes, nsieves, bn, q)
 {
   dataList <- AppendSplines(df_MNAR, bn, q)
