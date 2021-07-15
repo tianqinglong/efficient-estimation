@@ -11,7 +11,7 @@ source("analysis.R")
 
 n <- 1000
 coef1 <- c(-1, 4, -1, -1)
-sd <- sqrt(.25)
+sd <- 1
 
 Z <- matrix(rnorm(n), ncol = 1)
 U <- matrix(rnorm(2*n, 1-Z, 1), ncol = 2)
