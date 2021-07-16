@@ -73,7 +73,5 @@ sd <- 1
 
 ## My setting 3
 ## n = 1000; q = 2, bn = 3/2
-rout <- readRDS("no_git/rout_tian2_new.rds")
+rout <- readRDS("no_git/rout_tian2_final.rds")
 analysis(rout, c(coef1, sd))
-
-rout[[1]]

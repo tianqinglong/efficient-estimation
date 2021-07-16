@@ -89,6 +89,10 @@ df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
 opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = df_MNAR, ghxw = gaussHermiteData(8), hessian = T)
 opt2
 
+opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = bad_df, ghxw = gaussHermiteData(8), hessian = T)
+
+
+
 # EM Method
 
 yObs <- Y[which(Obs == 1)]
