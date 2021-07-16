@@ -162,9 +162,12 @@ analysis <- function(rout, true_theta)
   Pseudo_SD <- apply(sapply(pseudo_out, function(x) {x$coef}), MARGIN = 1, sd)
   
   pseudoOut <- rbind(Pseudo_CP, Pseudo_Bias, Pseudo_SE, Pseudo_SD)
+  colnames(pseudoOut) <- c("Intercept",
+                           paste("X", 1:num_covariate, sep = ""),
+                           "Sigma")
   
   ## Diagnosis
-  rout_save[sapply(rout_save, function(x) {!is.character(x$Var)})] <- NULL
+  rout_save[sapply(rout_save, function(x) {!is.character(x$Var)|!is.character(x$Pseudo)})] <- NULL
   if(length(rout_save) == 0)
   {
     Diagnosis1 <- "No Failure."

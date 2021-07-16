@@ -86,7 +86,10 @@ dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
   ggplot(aes(x = U))+geom_density(aes(fill = OBS), alpha = 0.5)
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
 
-opt2 <- optim(c(-0.5, 3, -1, 0.5), pseudo_loglikelihood_tian2, df_MNAR = df_MNAR, ghxw = gaussHermiteData(8), hessian = T)
+opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = df_MNAR, ghxw = gaussHermiteData(8), hessian = T)
+opt2
+
+# EM Method
 
 yObs <- Y[which(Obs == 1)]
 xObs <- X[which(Obs == 1),]
@@ -161,3 +164,9 @@ tau_mle <- emEstimate$Tau
 temp1 <- ProfileCov_additive(df_MNAR, min(hn, 1/sqrt(n)), beta_mle, sd_mle, tau_mle, bn, q, ghn, nsieves_add, ncovariate, max_iter, tol)
 cbind(beta_mle-qnorm(0.975)*sqrt(diag(temp1))[1:length(beta_mle)],
       beta_mle+qnorm(0.975)*sqrt(diag(temp1))[1:length(beta_mle)])
+
+coef1 <- c(-1, 4, -1, -1)
+sd <- 1
+
+rout <- readRDS("no_git/rout_tian4_final.rds")
+analysis(rout, c(coef1, sd))
