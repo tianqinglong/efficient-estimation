@@ -22,6 +22,7 @@ analysis <- function(rout, true_theta)
   ntotal <- length(rout)
   rout_save <- rout
   rout[sapply(rout, function(x) {is.character(x$Var)})] <- NULL
+  rout[sapply(rout, function(x) {is.character(x$Pseudo)})] <- NULL
   nclean <- length(rout)
   
   # Proportion of successful trials
