@@ -3,6 +3,20 @@
 # Author: Qinglong Tian
 # Date: July 10, 2021
 #-----------------------
+
+NegLogLikLinearRegression <- function(theta, data)
+{
+  beta <- theta[-length(theta)]
+  sigma <- theta[length(theta)]
+  dat <- data[,-2]
+  
+  yDat <- dat[,1]
+  xDat <- cbind(1, dat[,-1])
+  xMu <- as.matrix(xDat) %*% matrix(beta, ncol = 1)
+  
+  -sum(dnorm(log(yDat/(1-yDat)), mean = xMu, sd = sigma, log = T))
+}
+
 analysis <- function(rout, true_theta)
 {
   ntotal <- length(rout)
@@ -49,41 +63,34 @@ analysis <- function(rout, true_theta)
     # Complete
     compLM <- lm(fmla, data = dat)
     
-    sigma_lower_comp <- sqrt(sum(compLM$residuals^2)/qchisq(0.975, df = compLM$df.residual))
-    sigma_upper_comp <- sqrt(sum(compLM$residuals^2)/qchisq(0.025, df = compLM$df.residual))
-    
-    sigma_se_comp <- (sigma_upper_comp-sigma_lower_comp)/2/qnorm(0.975)
-    
-    compCoef <- c(compLM$coefficients, sigma(compLM))
+    compopt <- optim(c(compLM$coefficients, sigma(compLM)), NegLogLikLinearRegression,
+                     data = dat, hessian = T)
+    compCoef <- compopt$par
     names(compCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
-    compSE <- c(sqrt(diag(vcov(compLM))), sigma_se_comp)
+    compSE <- sqrt(diag(solve(compopt$hessian)))
     names(compSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     # Missing at random
     datMiss <- dat[dat$Obs == 1,]
     marLM <- lm(fmla, data = datMiss)
     
-    sigma_lower_mar <- sqrt(sum(marLM$residuals^2)/qchisq(0.975, df = marLM$df.residual))
-    sigma_upper_mar <- sqrt(sum(marLM$residuals^2)/qchisq(0.025, df = marLM$df.residual))
+    maropt <- optim(c(marLM$coefficients, sigma(marLM)), NegLogLikLinearRegression,
+                     data = datMiss, hessian = T)
+    sigma_se_mar <- sqrt(diag(compopt$hessian))[length(maropt$coefficients)]
     
-    sigma_se_mar <- (sigma_upper_mar-sigma_lower_mar)/2/qnorm(0.975)
+    marCoef <- maropt$par
     
-    marCoef <- c(marLM$coefficients, sigma(marLM))
     names(marCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
-    marSE <- c(sqrt(diag(vcov(marLM))), sigma_se_mar)
+    marSE <- sqrt(diag(solve(maropt$hessian)))
     names(marSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     return(list(
       BD_coef = compCoef,
       BD_se = compSE,
-      BD_sigma_lower = sigma_lower_comp,
-      BD_sigma_upper = sigma_upper_comp,
       MAR_coef = marCoef,
-      MAR_se = marSE,
-      MAR_sigma_lower = sigma_lower_mar,
-      MAR_sigma_upper = sigma_upper_mar
+      MAR_se = marSE
     ))
   }
   ) -> mar_comp
@@ -100,13 +107,6 @@ analysis <- function(rout, true_theta)
   BD_SE <- colMeans(BD_se_mat)
   BD_SD <- apply(BD_coef_mat, MARGIN = 2, sd)
   
-  BD_sigma_cp <- t(sapply(mar_comp, function(x)
-    {
-    (x$BD_coef[length(x$BD_coef)] >= x$BD_sigma_lower) & (x$BD_coef[length(x$BD_coef)] <= x$BD_sigma_upper)
-    }
-    )
-  )
-  BD_CP[length(BD_CP)] <- mean(BD_sigma_cp)
   bdOut <- rbind(BD_CP, BD_Bias, BD_SE, BD_SD)
   
   # MAR
@@ -121,14 +121,47 @@ analysis <- function(rout, true_theta)
   MAR_SE <- colMeans(MAR_se_mat)
   MAR_SD <- apply(MAR_coef_mat, MARGIN = 2, sd)
   
-  MAR_sigma_cp <- t(sapply(mar_comp, function(x)
-    {
-    (x$MAR_coef[length(x$MAR_coef)] >= x$MAR_sigma_lower) & (x$MAR_coef[length(x$MAR_coef)] <= x$BD_sigma_upper)
-    }
-    )
-  )
-  MAR_CP[length(MAR_CP)] <- mean(MAR_sigma_cp)
   marOut <- rbind(MAR_CP, MAR_Bias, MAR_SE, MAR_SD)
+  
+  ## Pseudo-likelihood
+  
+  lapply(rout, function(x)
+  {
+    pseudo <- x$Pseudo
+    coefPseudo <- pseudo$par
+    sePseudo <- sqrt(diag(solve(pseudo$hessian)))
+    lowerPseudo <- coefPseudo-1.96*sePseudo
+    upperPseudo <- coefPseudo+1.96*sePseudo
+    coverPseudo <- ( (true_theta <= upperPseudo) & (true_theta >= lowerPseudo))
+    
+    return(list(
+      coef = coefPseudo,
+      se = sePseudo,
+      lower = lowerPseudo,
+      upper = upperPseudo,
+      cover = coverPseudo
+    ))
+  }
+  ) -> pseudo_out
+  
+  Pseudo_CP <- rowMeans(sapply(pseudo_out, function(x) {
+    x$cover
+  })
+  )
+  
+  Pseudo_Bias <- rowMeans(sapply(pseudo_out, function(x) {
+    x$coef-true_theta
+  })
+  )
+  
+  Pseudo_SE <- rowMeans(sapply(pseudo_out, function(x) {
+    x$se
+  })
+  )
+  
+  Pseudo_SD <- apply(sapply(pseudo_out, function(x) {x$coef}), MARGIN = 1, sd)
+  
+  pseudoOut <- rbind(Pseudo_CP, Pseudo_Bias, Pseudo_SE, Pseudo_SD)
   
   ## Diagnosis
   rout_save[sapply(rout_save, function(x) {!is.character(x$Var)})] <- NULL
@@ -144,5 +177,5 @@ analysis <- function(rout, true_theta)
   Diagnosis2 <- c(nclean, ntotal, success_rate)
   names(Diagnosis2) <- c("Successfull Trials", "Total Trials", "Success Rate")
   
-  return(list(emOut, bdOut, marOut, Diagnosis1, Diagnosis2))
+  return(list(emOut, pseudoOut, bdOut, marOut, Diagnosis1, Diagnosis2))
 }
