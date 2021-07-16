@@ -106,5 +106,5 @@ outList
 ### q =2, bn = 3 -> 2;
 coef1 <- c(1,1)
 sd <- 1
-rout <- readRDS("no_git/rout_tian1_new.rds")
+rout <- readRDS("no_git/rout_tian1_final.rds")
 analysis(rout, c(coef1, sd))
