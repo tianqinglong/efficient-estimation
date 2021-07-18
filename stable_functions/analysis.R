@@ -3,6 +3,7 @@
 # Author: Qinglong Tian
 # Date: July 10, 2021
 #-----------------------
+source("C:/learn/R/parallel/parallel.R")
 
 NegLogLikLinearRegression <- function(theta, data)
 {
@@ -58,7 +59,7 @@ analysis <- function(rout, true_theta)
   
   ## MAR & Complete
   
-  lapply(rout, function(x){
+  mclapply(rout, function(x){
     dat <- as.data.frame(x$Data$data)
     fmla <- formula(paste("log(Y/(1-Y)) ~ ", paste("X", 1:num_covariate, sep = "", collapse = "+"), sep = ""))
     # Complete
@@ -67,9 +68,11 @@ analysis <- function(rout, true_theta)
     compopt <- optim(c(compLM$coefficients, sigma(compLM)), NegLogLikLinearRegression,
                      data = dat, hessian = T)
     compCoef <- compopt$par
+    compCoef[-length(compCoef)] <- compLM$coefficients
     names(compCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     compSE <- sqrt(diag(solve(compopt$hessian)))
+    compSE[-length(compSE)] <- sqrt(diag(vcov(compLM)))
     names(compSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     # Missing at random
@@ -81,10 +84,11 @@ analysis <- function(rout, true_theta)
     sigma_se_mar <- sqrt(diag(compopt$hessian))[length(maropt$coefficients)]
     
     marCoef <- maropt$par
-    
+    marCoef[-length(marCoef)] <- marLM$coefficients
     names(marCoef) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     marSE <- sqrt(diag(solve(maropt$hessian)))
+    marSE[-length(marSE)] <- sqrt(diag(vcov(marLM)))
     names(marSE) <- c("Intercept", paste("X", 1:num_covariate, sep = ""), "Sigma")
     
     return(list(
@@ -126,7 +130,7 @@ analysis <- function(rout, true_theta)
   
   ## Pseudo-likelihood
   
-  lapply(rout, function(x)
+  mclapply(rout, function(x)
   {
     pseudo <- x$Pseudo
     coefPseudo <- pseudo$par
@@ -168,7 +172,7 @@ analysis <- function(rout, true_theta)
                            "Sigma")
   
   ## Diagnosis
-  rout_save[sapply(rout_save, function(x) {!is.character(x$Var)|!is.character(x$Pseudo)})] <- NULL
+  rout_save[sapply(rout_save, function(x) {!is.character(x$Var)})] <- NULL
   if(length(rout_save) == 0)
   {
     Diagnosis1 <- "No Failure."
