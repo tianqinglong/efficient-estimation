@@ -82,11 +82,11 @@ confint(lmBD)
 coef1 <- c(-1, 4, -1, -1)
 sd <- 1
 
-rout <- readRDS("no_git/rout_tian4_new.rds")
-analysis(rout, c(coef1, sd))
+rout1 <- readRDS("no_git/rout_tian4_final_part1.rds")
+rout2 <- readRDS("no_git/rout_tian4_final_part2.rds")
+rout3 <- readRDS("no_git/rout_tian4_final_part3.rds")
+rout4 <- readRDS("no_git/rout_tian4_final_part4.rds")
+rout5 <- readRDS("no_git/rout_tian4_final_part5.rds")
 
-rout <- readRDS("no_git/rout_tian4_new_b3.rds")
-analysis(rout, c(coef1, sd))
-
-rout <- readRDS("no_git/rout_tian4_new_b4.rds")
-analysis(rout, c(coef1, sd))
+rout <- c(rout1, rout2, rout3, rout4, rout5)
+analysis(rout, c(coef1, sd)) -> setting4

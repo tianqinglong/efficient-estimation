@@ -107,4 +107,5 @@ outList
 coef1 <- c(1,1)
 sd <- 1
 rout <- readRDS("no_git/rout_tian1_final.rds")
-analysis(rout, c(coef1, sd))
+analysis(rout, c(coef1, sd)) -> setting1
+# saveRDS(setting1, file = "no_git/tian1.rds")

@@ -86,12 +86,9 @@ dat %>% as.data.frame %>% mutate(OBS = as.factor(Obs), yy = log(Y/(1-Y))) %>%
   ggplot(aes(x = U))+geom_density(aes(fill = OBS), alpha = 0.5)
 df_MNAR <- list(data = dat, Z_indices = 3, U_indices = 4)
 
-opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = df_MNAR, ghxw = gaussHermiteData(8), hessian = T)
-opt2
+# opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = df_MNAR, ghxw = gaussHermiteData(20), hessian = T)
 
-opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = bad_df, ghxw = gaussHermiteData(8), hessian = T)
-
-
+# opt2 <- optim(c(coef1, sd), pseudo_loglikelihood_tian2, df_MNAR = bad_df, ghxw = gaussHermiteData(20), hessian = T)
 
 # EM Method
 
@@ -101,7 +98,7 @@ yLM <- log(yObs/(1-yObs))
 lmMAR <- lm(yLM~xObs)
 hn <- min(sqrt(diag(vcov(lmMAR))))
 
-ghn <- 6
+ghn <- 10
 bn <- 3
 q <- 2
 max_iter <- 500

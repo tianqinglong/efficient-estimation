@@ -73,5 +73,13 @@ sd <- 1
 
 ## My setting 3
 ## n = 1000; q = 2, bn = 3/2
-rout <- readRDS("no_git/rout_tian2_final.rds")
-analysis(rout, c(coef1, sd))
+rout1 <- readRDS("no_git/rout_tian2_final_part1.rds")
+rout2 <- readRDS("no_git/rout_tian2_final_part2.rds")
+rout3 <- readRDS("no_git/rout_tian2_final_part3.rds")
+rout4 <- readRDS("no_git/rout_tian2_final_part4.rds")
+rout5 <- readRDS("no_git/rout_tian2_final_part5.rds")
+
+rout <- c(rout1, rout2, rout3, rout4, rout5)
+
+analysis(rout, c(coef1, sd)) -> setting2
+# saveRDS(setting2, file = "no_git/tian2.rds")
