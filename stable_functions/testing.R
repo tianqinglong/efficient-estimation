@@ -13,8 +13,8 @@ n <- 1000
 coef1 <- c(1,1)
 sd <- 1
 ghn <- 8
-bn <- 2
-q <- 2
+bn <- 3
+q <- 3
 max_iter <- 500
 tol <- 1e-5
 
