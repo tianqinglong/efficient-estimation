@@ -59,7 +59,7 @@ analysis <- function(rout, true_theta)
   
   ## MAR & Complete
   
-  mclapply(rout, function(x){
+  lapply(rout, function(x){
     dat <- as.data.frame(x$Data$data)
     fmla <- formula(paste("log(Y/(1-Y)) ~ ", paste("X", 1:num_covariate, sep = "", collapse = "+"), sep = ""))
     # Complete
@@ -130,7 +130,7 @@ analysis <- function(rout, true_theta)
   
   ## Pseudo-likelihood
   
-  mclapply(rout, function(x)
+  lapply(rout, function(x)
   {
     pseudo <- x$Pseudo
     coefPseudo <- pseudo$par
