@@ -3,7 +3,7 @@
 # Author: Qinglong Tian
 # Date: July 10, 2021
 #-----------------------
-source("C:/learn/R/parallel/parallel.R")
+# source("C:/learn/R/parallel/parallel.R")
 
 NegLogLikLinearRegression <- function(theta, data)
 {
@@ -28,6 +28,9 @@ analysis <- function(rout, true_theta)
   
   # Proportion of successful trials
   success_rate <- nclean/ntotal
+  
+  selected <- sample(nclean, size = 2000, replace = F)
+  rout <- lapply(selected, function(x) {rout[[x]]})
   
   ## EM
   

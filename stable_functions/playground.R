@@ -230,12 +230,12 @@ nonMissingProb_true <- 1-yOriginal+0.5*yOriginal^2
 nonMissingProb_true <- 1/(1+exp(-nonMissingProb_true))
 
 plot(x = yOriginal, y = ci[,1], type = "l",
-     xlab = "Y", ylab = expression(paste("logit(",pi,"(Y))",sep = "")), lty = 2, col = 2, ylim = c(0.5, 1), lwd = 2)
+     xlab = "Y", ylab = expression(paste(pi,"(Y)",sep = "")), lty = 2, col = 2, ylim = c(0.5, 1), lwd = 2)
 lines(x = yOriginal, y = nonMissingProb_true, lty = 1, col = 1, lwd = 2)
 lines(x = yOriginal, y = ci[,2], lty = 2, col = 2, lwd = 2)
 lines(x = yOriginal, y = ci[,3], lty = 4, col = 4, lwd = 2.2)
 dsty <- density(log(y_all/(1-y_all)))
-legend(x = c(0, 1.2), y = c(8, 5.5),c("True",  "Median", "95% Band"), lty = c(1, 4,2), col = c(1,4,2), lwd = c(1,1.25,1))
+legend(x = c(3.4, 4.5), y = c(0.5, .65),c("True",  "Median", "95% Band"), lty = c(1, 4,2), col = c(1,4,2), lwd = c(1,1.25,1))
 
 # Draw proportion of missing
 
