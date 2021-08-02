@@ -322,3 +322,85 @@ ProfileCov_additive <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
   
   return(cov_mat)
 }
+
+ProfileCov_additive_sigma_fixed <- function(df_MNAR, hn, beta_mle, sigma_mle, tau_mle,
+                                            bn, q, gHNodes, n_sieve, n_covariate, max_iter, tol)
+{
+  numPara <- length(beta_mle)
+  covMat <- matrix(nrow = numPara, ncol = numPara)
+  diagMat <- diag(numPara)
+  theta_mle <- beta_mle
+  tau_init <- tau_mle
+  combn_mat <- cbind(combn(1:numPara, 2), matrix(rep(1:numPara, each = 2), nrow = 2))
+  
+  plusplus <- numeric(ncol(combn_mat))
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    theta_1 <- theta_mle+(diagMat[k,]+diagMat[l,])*hn/2
+    emTemp <- main_additive(df_MNAR, theta_1, sigma_mle, tau_init,
+                            bn, q, gHNodes, max_iter, tol, T)
+    plusplus[i] <- computeLogLikelihood_additive(df_MNAR, theta_1, sigma_mle, emTemp$Tau,
+                                                 gHNodes, n_sieve, bn, q)
+  }
+  
+  minusplus <- numeric(ncol(combn_mat))
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    theta_1 <- theta_mle+(-diagMat[k,]+diagMat[l,])*hn/2
+    emTemp <- main_additive(df_MNAR, theta_1, sigma_mle, tau_init,
+                            bn, q, gHNodes, max_iter, tol, T)
+    minusplus[i] <- computeLogLikelihood_additive(df_MNAR, theta_1, sigma_mle, emTemp$Tau,
+                                                  gHNodes, n_sieve, bn, q)
+  }
+  
+  plusminus <- numeric(ncol(combn_mat))
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    theta_1 <- theta_mle+(diagMat[k,]-diagMat[l,])*hn/2
+    emTemp <- main_additive(df_MNAR, theta_1, sigma_mle, tau_init,
+                            bn, q, gHNodes, max_iter, tol, T)
+    plusminus[i] <- computeLogLikelihood_additive(df_MNAR, theta_1, sigma_mle, emTemp$Tau,
+                                                  gHNodes, n_sieve, bn, q)
+  }
+  
+  minusminus <- numeric(ncol(combn_mat))
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    theta_1 <- theta_mle+(-diagMat[k,]-diagMat[l,])*hn/2
+    emTemp <- main_additive(df_MNAR, theta_1, sigma_mle, tau_init,
+                            bn, q, gHNodes, max_iter, tol, T)
+    minusminus[i] <- computeLogLikelihood_additive(df_MNAR, theta_1, sigma_mle, emTemp$Tau,
+                                                   gHNodes, n_sieve, bn, q)
+  }
+  
+  diffs <- plusplus-minusplus-plusminus+minusminus
+  
+  for(i in 1:ncol(combn_mat))
+  {
+    chosen <- combn_mat[,i]
+    k <- chosen[1]
+    l <- chosen[2]
+    
+    val <- diffs[i]
+    covMat[k,l] <- val
+    covMat[l,k] <- val
+  }
+  
+  covMat <- covMat/hn^2
+  cov_mat <- solve(-covMat)
+  
+  return(cov_mat)
+}
+

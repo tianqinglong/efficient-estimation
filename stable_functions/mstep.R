@@ -304,7 +304,7 @@ MakeFullDataSetMissing_additive <- function(dataList, rules, betaOld, sigmaOld, 
 # Use glm to do the estimation
 #-----------------------
 
-MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigma = FALSE, beta_old, sigma_old)
+MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigma = FALSE, beta_old, sigma_old, fixed_sigma = FALSE)
 {
   # Beta and Sigma Part
   if (nu > 0)
@@ -347,6 +347,11 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigm
     sigmaNew <- sqrt(sum(matAllFull$Weight*f1$residuals^2, na.rm = T)/sum(matAllFull$Weight, na.rm = T))
   }
   
+  if (fixed_sigma)
+  {
+    sigmaNew <- sigma_old
+  }
+  
   # Tau Part
   fmla2 <- as.formula(paste("Y2 ~ 0+", paste(paste("bs", 1:nsieve, sep = ""), collapse = "+")))
   f2 <- glm(formula = fmla2, weights = Weight, family = binomial(link = "logit"), data = matAllFull)
@@ -361,7 +366,7 @@ MStep_1Step <- function(matObsFull, matMissFull, nu, nz, nsieve, fixed_beta_sigm
 # df_MNAR: is the list without splines. Only with Y, Obs, X and info about U and Z
 main <- function(df_MNAR, beta_init, sigma_init, tau_init,
                  bn = 3, q = 3, gaussHermiteNodes = 10,
-                 max_iter = 200, tol = 1e-4, fixed_beta_sigma=F)
+                 max_iter = 200, tol = 1e-4, fixed_beta_sigma=F, fixed_sigma = F)
 {
   rules <- gaussHermiteData(gaussHermiteNodes)
   datList <- AppendSplines(df_MNAR, bn, q)
@@ -379,7 +384,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing(datList, rules, beta_old, sigma_old, tau_old)
-    newList <- MStep_1Step(df1, df2, nu, nz, nsieve, fixed_beta_sigma, beta_old, sigma_old)
+    newList <- MStep_1Step(df1, df2, nu, nz, nsieve, fixed_beta_sigma, beta_old, sigma_old, fixed_sigma = fixed_sigma)
     
     beta_new <- newList$Beta
     sigma_new <- newList$Sigma
@@ -419,7 +424,7 @@ main <- function(df_MNAR, beta_init, sigma_init, tau_init,
 
 main_additive <- function(df_MNAR, beta_init, sigma_init, tau_init,
                           bn = 3, q = 3, gaussHermiteNodes = 10,
-                          max_iter = 200, tol = 1e-4, fixed_beta_sigma=F)
+                          max_iter = 200, tol = 1e-4, fixed_beta_sigma=F, fixed_sigma = F)
 {
   rules <- gaussHermiteData(gaussHermiteNodes)
   datList <- AppendSplines(df_MNAR, bn, q)
@@ -437,7 +442,7 @@ main_additive <- function(df_MNAR, beta_init, sigma_init, tau_init,
   while(iter <= max_iter & !SUCCESS)
   {
     df2 <- MakeFullDataSetMissing_additive(datList, rules, beta_old, sigma_old, tau_old)
-    newList <- MStep_1Step(df1, df2, nu, nz, nsieve, fixed_beta_sigma, beta_old, sigma_old)
+    newList <- MStep_1Step(df1, df2, nu, nz, nsieve, fixed_beta_sigma, beta_old, sigma_old, fixed_sigma = fixed_sigma)
     
     beta_new <- newList$Beta
     sigma_new <- newList$Sigma
